@@ -1,35 +1,33 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { useState, useEffect } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase/config";
+import type { User } from "firebase/auth";
+import Login from "./pages/login";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState<User | null>(null);
+  const [cargando, setCargando] = useState(true);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setCargando(false);
+    });
+  }, []);
+
+  if (cargando) return <p>Cargando...</p>;
+  if (!user) return <Login />;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <button onClick={handleLogout}>Cerrar sesion</button>
+    </div>
+  );
 }
 
-export default App
+export default App;
