@@ -88,6 +88,16 @@ export default function Login() {
               />
             </div>
 
+            <div className="text-sm text-right">
+              <Link
+                to="/createAccount"
+                className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+              >
+                ¿No tienes una cuenta?              </Link>
+            </div>
+
+
+
             {/* 2. ENLACE A LA PÁGINA DE RESETEO DE CONTRASEÑA */}
             <div className="text-sm text-right">
               <Link

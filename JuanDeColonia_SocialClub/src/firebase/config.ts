@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -14,10 +15,11 @@ const firebaseConfig = {
   storageBucket: "juandecolonia-socialclub.firebasestorage.app",
   messagingSenderId: "803457189688",
   appId: "1:803457189688:web:28ce83bda2e000034ae3cd",
-  measurementId: "G-CK30LGT9XJ"
+  measurementId: "G-CK30LGT9XJ",
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const analytics = getAnalytics(app);
+export const firestore = getFirestore(app);

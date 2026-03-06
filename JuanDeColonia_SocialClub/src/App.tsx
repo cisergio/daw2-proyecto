@@ -13,6 +13,7 @@ import {
 import Login from "./pages/login";
 import Layout from "./pages/Layout";
 import ResetPassword from "./pages/resetPassword";
+import CreateAccount from "./pages/createAccount";
 
 /**
  * Componente para las rutas protegidas. Accesibles solo tras iniciar sesión.
@@ -23,7 +24,9 @@ function ProtectedRoutes() {
   // AÑADIMOS ESTA GUARDIA INTELIGENTE:
   // Si el usuario está autenticado (por eso se renderiza este componente)
   // pero la URL sigue siendo una de las públicas, lo redirigimos a la raíz.
-  if (["/login", "/reset-password"].includes(location.pathname)) {
+  if (
+    ["/login", "/reset-password", "/createAccount"].includes(location.pathname)
+  ) {
     return <Navigate to="/" replace />;
   }
 
@@ -51,6 +54,7 @@ function PublicRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/createAccount" element={<CreateAccount />} />
       {/* Si un usuario no logueado intenta ir a cualquier otra ruta, se le redirige a /login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
