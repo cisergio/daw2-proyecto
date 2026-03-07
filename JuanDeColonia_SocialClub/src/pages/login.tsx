@@ -30,23 +30,21 @@ export default function Login() {
           <div className="flex justify-center mb-6">
             <span className="bg-blue-600 p-3 rounded-xl shadow-md">
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
+                fill="none"
                 stroke="white"
+                strokeWidth="2"
                 className="w-7 h-7"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c.251.023.501.05.75.082m.75.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082m-1.5 0c.251.023.501.05.75.082m0 0c.251.023.501.05.75.082M12 21v-8.283m0 0c.251.023.501.05.75.082m-1.5 0c.251.023.501.05.75.082m0 0c.251.023.501.05.75.082"
-                />
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
             </span>
           </div>
           <h2 className="text-2xl font-bold text-center text-gray-800">
-            Acceso al Panel
+            Bienvenido a SocialClub :D
           </h2>
           <p className="text-center text-gray-500 mb-8">
             Introduce tus credenciales para continuar
@@ -93,10 +91,9 @@ export default function Login() {
                 to="/createAccount"
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
               >
-                ¿No tienes una cuenta?              </Link>
+                ¿No tienes una cuenta?{" "}
+              </Link>
             </div>
-
-
 
             {/* 2. ENLACE A LA PÁGINA DE RESETEO DE CONTRASEÑA */}
             <div className="text-sm text-right">

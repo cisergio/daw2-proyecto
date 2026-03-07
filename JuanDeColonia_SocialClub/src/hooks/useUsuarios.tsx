@@ -6,7 +6,6 @@ export async function crearUsuario(
   apellidos: string,
   usuario: string,
   email: string,
-  password: string
 ) {
   const id = crearId(nombre, apellidos, usuario);
 

@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -18,25 +18,13 @@ export default function CreateAccount() {
     setError(null);
 
     try {
-      try {
-        await crearUsuario(nombre, apellidos, usuario, email, password);
-        auth.signOut();
-        setIniciado("Perfecto se ha creado la cuenta vuelve a iniciar sesion");
-      } catch (error: any) {
-        setError("Error al crear la cuenta. Por favor, inténtalo de nuevo");
-        console.log(
-          "Error al añadirlo a la base de Datos: ",
-          error.code,
-          error.message
-        );
-        return;
-      }
-
+      await crearUsuario(nombre, apellidos, usuario, email);
       await createUserWithEmailAndPassword(auth, email, password);
+      await signOut(auth);
+      setIniciado("Perfecto se ha creado la cuenta vuelve a iniciar sesion");
     } catch (error: any) {
       setError("Error al crear la cuenta. Por favor, inténtalo de nuevo");
       console.error("Code: ", error.code, "Message: ", error.message);
-      return;
     }
   };
 
