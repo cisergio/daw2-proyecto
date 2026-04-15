@@ -8,9 +8,15 @@ export type cliente = {
   uaurio: string;
 };
 
-export type post = {
-  creador: string;
+export type Post = {
+  id:string;
+  creador: {
+    nombre: string;
+    usuario: string;
+    fotoPerfil:string;
+  }
   contenido: string;
   adjunto: string;
   likes: number;
+  createdAt: Timestamp;
 };

@@ -1,25 +1,19 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDzz69a1qZIerFhy4JJGmxMxtZXGqcg7I0",
   authDomain: "juandecolonia-socialclub.firebaseapp.com",
   projectId: "juandecolonia-socialclub",
   storageBucket: "juandecolonia-socialclub.firebasestorage.app",
   messagingSenderId: "803457189688",
-  appId: "1:803457189688:web:28ce83bda2e000034ae3cd",
-  measurementId: "G-CK30LGT9XJ",
+  appId: "1:803457189688:web:0e4050439986bc3a4ae3cd",
+  measurementId: "G-C128D57KEW"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Patrón Singleton para Next.js: Inicializa solo si no existe ya una instancia
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 export const auth = getAuth(app);
-export const analytics = getAnalytics(app);
 export const firestore = getFirestore(app);

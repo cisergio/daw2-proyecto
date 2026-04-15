@@ -1,8 +1,9 @@
+"use client";
 import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "../firebase/config";
+import { auth } from "../../firebase/config";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { crearUsuario } from "../hooks/useUsuarios";
+import Link from "next/link";
+import { crearUsuario } from "../../hooks/useUsuarios";
 
 export default function CreateAccount() {
   const [email, setEmail] = useState<string>("");
@@ -137,13 +138,13 @@ export default function CreateAccount() {
           </div>
 
           <div className="mt-6 text-sm">
-            <Link to="/login" className="form-link">
+            <Link href="/login" className="form-link">
               Volver a Iniciar Sesión
             </Link>
           </div>
 
           {error && <div className="form-error">{error}</div>}
-          {iniciado && <div className="form-succes">{error}</div>}
+          {iniciado && <div className="form-success">{iniciado}</div>}
 
           <div>
             <button type="submit" className="form-button">

@@ -1,6 +1,7 @@
+"use client";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { auth } from "../firebase/config";
+import Link from "next/link";
+import { auth } from "../../firebase/config";
 import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function ResetPassword() {
@@ -77,7 +78,7 @@ export default function ResetPassword() {
         )}
 
         <div className="mt-6 text-sm">
-          <Link to="/login" className="form-link">
+          <Link href="/login" className="form-link">
             Volver a Iniciar Sesión
           </Link>
         </div>

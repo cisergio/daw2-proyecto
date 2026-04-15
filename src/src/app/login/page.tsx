@@ -1,21 +1,21 @@
+"use client";
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase/config";
-import { Link } from "react-router-dom"; // 1. IMPORTAMOS Link EN LUGAR DE NavLink
+import { auth } from "../../firebase/config";
+import Link from "next/link"; // Next.js Link
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null); // Estado para manejar errores de UI
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null); // Reseteamos el error en cada intento
+    setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // El `onAuthStateChanged` en App.tsx se encargará de la redirección
+      // Aqui podrías redirigir usando import { useRouter } from 'next/navigation'; si lo necesitas
     } catch (error: any) {
-      // Mostramos un mensaje de error más amigable en la UI
       setError(
         "Credenciales incorrectas. Por favor, verifica tu email y contraseña.",
       );
@@ -88,24 +88,22 @@ export default function Login() {
 
             <div className="text-sm text-right">
               <Link
-                to="/createAccount"
+                href="/createAccount"
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
               >
                 ¿No tienes una cuenta?{" "}
               </Link>
             </div>
 
-            {/* 2. ENLACE A LA PÁGINA DE RESETEO DE CONTRASEÑA */}
             <div className="text-sm text-right">
               <Link
-                to="/reset-password"
+                href="/reset-password"
                 className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
               >
                 ¿Has olvidado tu contraseña?
               </Link>
             </div>
 
-            {/* Mensaje de error, se mostrará solo si hay un error */}
             {error && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm">
                 {error}
