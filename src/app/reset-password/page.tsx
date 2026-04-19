@@ -1,33 +1,31 @@
 "use client";
-import React, { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { auth } from "../../firebase/config";
 import { sendPasswordResetEmail } from "firebase/auth";
+import { toast } from "sonner";
 
 export default function ResetPassword() {
   const [email, setEmail] = useState<string>("");
-  const [enviado, setEnviado] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setEnviado(false);
 
     if (!email) {
-      setError("Por favor, introduce tu correo electrónico.");
+      toast.error("Por favor, introduce tu correo electrónico.");
       return;
     }
 
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setEnviado(true);
-    } catch (error: any) {
-      console.error("Error al enviar el correo", error);
-      setError(
-        "No se pudo enviar el correo. Revisa que la dirección sea correcta."
-      );
-    }
+    startTransition(async () => {
+      const promise = sendPasswordResetEmail(auth, email);
+
+      toast.promise(promise, {
+        loading: "Enviando correo de recuperación...",
+        success: "¡Correo enviado! Revisa tu bandeja de entrada.",
+        error: "No se pudo enviar el correo. Revisa que la dirección sea correcta.",
+      });
+    });
   };
 
   return (
@@ -55,27 +53,16 @@ export default function ResetPassword() {
           </div>
 
           <div>
-            <button type="submit" className="form-button">
-              Enviar Correo de Recuperación
+            <button 
+              type="submit" 
+              disabled={isPending}
+              className="form-button disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending ? "Enviando..." : "Enviar Correo de Recuperación"}
             </button>
           </div>
         </form>
 
-        {enviado && (
-          <div className="form-success mt-4 text-left">
-            <p className="font-semibold">¡Correo enviado!</p>
-            <p className="text-sm">
-              Revisa tu bandeja de entrada (y spam) para continuar.
-            </p>
-          </div>
-        )}
-
-        {error && (
-          <div className="form-error mt-4 text-left">
-            <p className="font-semibold">Error</p>
-            <p className="text-sm">{error}</p>
-          </div>
-        )}
 
         <div className="mt-6 text-sm">
           <Link href="/login" className="form-link">

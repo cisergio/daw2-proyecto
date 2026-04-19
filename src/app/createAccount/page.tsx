@@ -1,9 +1,11 @@
 "use client";
 import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth } from "../../firebase/config";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { crearUsuario } from "../../hooks/useUsuarios";
+import { toast } from "sonner";
+import crearUsuario from "../actions/creacionUsuario";
+import { useRouter } from "next/navigation";
 
 export default function CreateAccount() {
   const [email, setEmail] = useState<string>("");
@@ -11,22 +13,33 @@ export default function CreateAccount() {
   const [apellidos, setApellidos] = useState<string>("");
   const [usuario, setUsuario] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
-  const [iniciado, setIniciado] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleSingUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    try {
-      await crearUsuario(nombre, apellidos, usuario, email);
-      await createUserWithEmailAndPassword(auth, email, password);
-      await signOut(auth);
-      setIniciado("Perfecto se ha creado la cuenta vuelve a iniciar sesion");
-    } catch (error: any) {
-      setError("Error al crear la cuenta. Por favor, inténtalo de nuevo");
-      console.error("Code: ", error.code, "Message: ", error.message);
-    }
+    startTransition(async () => {
+      const promise = async () => {
+        // 1. Crear usuario en la base de datos (Server Action)
+        const res = await crearUsuario(nombre, apellidos, usuario, email, password);
+        if (!res.success) throw new Error(res.error);
+        
+        // 3. Cerrar sesión automáticamente (opcional, según tu flujo)
+        await signOut(auth);
+        
+        return "Cuenta creada correctamente. ¡Ya puedes iniciar sesión!";
+      };
+
+      toast.promise(promise(), {
+        loading: "Creando tu cuenta...",
+        success: (msg) => {
+          router.push("/login"); // Redirigir al login tras el éxito
+          return msg;
+        },
+        error: (err) => err.message || "No se pudo crear la cuenta",
+      });
+    });
   };
 
   return (
@@ -143,12 +156,13 @@ export default function CreateAccount() {
             </Link>
           </div>
 
-          {error && <div className="form-error">{error}</div>}
-          {iniciado && <div className="form-success">{iniciado}</div>}
-
           <div>
-            <button type="submit" className="form-button">
-              Crear Cuenta
+            <button 
+              type="submit" 
+              className="form-button disabled:opacity-50 disabled:cursor-not-allowed" 
+              disabled={isPending}
+            >
+              {isPending ? "Procesando..." : "Crear Cuenta"}
             </button>
           </div>
         </form>

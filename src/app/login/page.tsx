@@ -1,26 +1,31 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase/config";
-import Link from "next/link"; // Next.js Link
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // Aqui podrías redirigir usando import { useRouter } from 'next/navigation'; si lo necesitas
-    } catch (error: any) {
-      setError(
-        "Credenciales incorrectas. Por favor, verifica tu email y contraseña.",
-      );
-      console.error("Error de autenticación:", error.code, error.message);
-    }
+    
+    startTransition(async () => {
+      const toastId = toast.loading("Iniciando sesión...");
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        toast.success("¡Bienvenido de nuevo!", { id: toastId });
+        router.push("/");
+      } catch (error: any) {
+        toast.error("Credenciales incorrectas. Verifica tu email y contraseña.", { id: toastId });
+        console.error("Error de autenticación:", error.code, error.message);
+      }
+    });
   };
 
   return (
@@ -104,21 +109,28 @@ export default function Login() {
               </Link>
             </div>
 
-            {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                disabled={isPending}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Entrar
+                {isPending ? "Entrando..." : "Entrar"}
               </button>
             </div>
           </form>
+
+          <div className="mt-8 pt-6 border-t border-gray-100">
+            <Link 
+              href="/" 
+              className="flex items-center justify-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Volver al Feed
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -1,9 +1,21 @@
 "use client";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { usePost } from "../hooks/usePost";
+import { useAuth } from "../context/AuthProvider";
+import { useRouter } from "next/navigation";
 
 export default function Feed() {
   const { posts, loading, hasMore, getInitialPosts, getMorePosts } = usePost();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const handleCreatePost = () => {
+    if (!user) {
+      router.push("/login");
+    } else {
+      router.push("/create-post");
+    }
+  };
   
   // Referencia para guardar la instancia de la API de IntersectionObserver
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -70,10 +82,11 @@ export default function Feed() {
                   )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-800">@{post.creador.usuario}</h3>
+                  <h3 className="font-semibold text-gray-800">
+                    @{post.creador?.usuario || "anónimo"}
+                  </h3>
                   <p className="text-xs text-gray-500">
-                    {/* Convertimos el Timestamp de Firebase a fecha legible si existe */}
-                    {post.createdAt?.toDate ? post.createdAt.toDate().toLocaleDateString() : ''}
+                    <ClientDate date={post.createdAt?.toDate?.()} />
                   </p>
                 </div>
               </div>
@@ -115,6 +128,44 @@ export default function Feed() {
           </p>
         )}
       </div>
+
+      {/* Botón flotante para crear post */}
+      <button
+        onClick={handleCreatePost}
+        className="fixed bottom-8 left-8 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 z-40 group"
+        aria-label="Crear nueva publicación"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-8 h-8"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
+        </svg>
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-semibold whitespace-nowrap">
+          Nueva Publicación
+        </span>
+      </button>
     </div>
   );
+}
+
+// Componente pequeño para evitar errores de hidratación con fechas
+function ClientDate({ date }: { date: Date | undefined }) {
+  const [formattedDate, setFormattedDate] = useState<string>("");
+
+  useEffect(() => {
+    if (date) {
+      setFormattedDate(date.toLocaleDateString());
+    }
+  }, [date]);
+
+  return <>{formattedDate}</>;
 }
