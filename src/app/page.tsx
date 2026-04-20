@@ -5,7 +5,15 @@ import { useAuth } from "../context/AuthProvider";
 import { useRouter } from "next/navigation";
 
 export default function Feed() {
-  const { posts, loading, hasMore, getInitialPosts, getMorePosts } = usePost();
+  const { 
+    posts, 
+    loading, 
+    hasMore, 
+    getInitialPosts, 
+    getMorePosts, 
+    pendingPosts, 
+    showNewPosts 
+  } = usePost();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -15,6 +23,11 @@ export default function Feed() {
     } else {
       router.push("/create-post");
     }
+  };
+
+  const handleUpdateFeed = () => {
+    showNewPosts();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   
   // Referencia para guardar la instancia de la API de IntersectionObserver
@@ -53,6 +66,26 @@ export default function Feed() {
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Feed</h1>
+        
+        {/* NOTIFICACIÓN DE POSTS NUEVOS (Estilo Twitter Premium) */}
+        {pendingPosts.length > 0 && (
+          <div className="notification-badge-float animate-slide-down-fade">
+            <button
+              onClick={handleUpdateFeed}
+              className="bg-blue-600/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 font-semibold flex items-center gap-2 border border-white/20 ring-4 ring-blue-600/10"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 20 20" 
+                fill="currentColor" 
+                className="w-5 h-5 animate-bounce"
+              >
+                <path fillRule="evenodd" d="M10 17a.75.75 0 0 1-.75-.75V5.612L5.29 9.77a.75.75 0 0 1-1.08-1.04l5.25-5.5a.75.75 0 0 1 1.08 0l5.25 5.5a.75.75 0 1 1-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0 1 10 17Z" clipRule="evenodd" />
+              </svg>
+              <span>Mostrar {pendingPosts.length} {pendingPosts.length === 1 ? "publicación nueva" : "publicaciones nuevas"}</span>
+            </button>
+          </div>
+        )}
         
         {/* Recorremos todos los posts */}
         {posts.map((post, index) => {

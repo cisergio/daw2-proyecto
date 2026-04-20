@@ -57,4 +57,25 @@
   .form-button {
       @apply w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200;
   }
+
+  /* Animaciones para la notificación de posts nuevos */
+  @keyframes slide-down-fade {
+    from { transform: translateY(-1rem); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes soft-pulse {
+    0% { transform: scale(1) translateX(-50%); }
+    50% { transform: scale(1.03) translateX(-48.5%); }
+    100% { transform: scale(1) translateX(-50%); }
+  }
+
+  .animate-slide-down-fade {
+    animation: slide-down-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .notification-badge-float {
+    @apply fixed top-24 left-1/2 z-50;
+    transform: translateX(-50%);
+  }
 }
