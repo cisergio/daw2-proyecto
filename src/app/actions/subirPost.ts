@@ -32,12 +32,13 @@ export default async function subirPost(formData: FormData, uid: string) {
       throw new Error("Lo sentimos, no hemos podido encontrar tu perfil de usuario.");
     }
     const userData = userDoc.data();
-    
+
     // Preparamos el objeto del creador con datos por defecto por si falta alguno
     const creador = {
       fotoPerfil: userData?.fotoPerfil || "",
       nombre: userData?.nombre || "Usuario",
-      usuario: userData?.usuario || "anónimo"
+      usuario: userData?.usuario || "anónimo",
+      uid: userData?.uid
     };
 
     /**
@@ -79,9 +80,9 @@ export default async function subirPost(formData: FormData, uid: string) {
     return { success: true, message: "¡Tu publicación ya está en el feed! 🚀" };
   } catch (error: any) {
     console.error("Error crítico al subir post:", error);
-    return { 
-      success: false, 
-      error: "Vaya, algo ha salido mal al publicar. Por favor, inténtalo de nuevo en unos momentos." 
+    return {
+      success: false,
+      error: "Vaya, algo ha salido mal al publicar. Por favor, inténtalo de nuevo en unos momentos."
     };
   }
 }
