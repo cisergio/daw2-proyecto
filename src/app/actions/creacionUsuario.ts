@@ -26,13 +26,16 @@ export default async function crearUsuario(
       usuario: usuario.toLowerCase(),
       email,
       creacion: Timestamp.fromDate(new Date()),
-      uid: uid // Guardamos el UID también dentro del documento por conveniencia
+      uid: uid,
+      fotoPerfil: "",
+      seguidores: 0,
+      seguidos: 0 // Guardamos el UID también dentro del documento por conveniencia
     });
 
     return { success: true, message: "Usuario creado exitosamente" };
   } catch (error: any) {
     console.error("Error en registro Admin SDK:", error.message);
-    
+
     // Mapeo de errores comunes de Firebase Auth
     let friendlyMessage = "No se pudo crear la cuenta";
     if (error.code === 'auth/email-already-exists') {

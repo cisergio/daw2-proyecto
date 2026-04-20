@@ -2,9 +2,12 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthProvider";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const isProfilePage = pathname === "/profile";
   
   // Extraemos la primera letra del email para usarla de foto de perfil temporal
   const inicial = user?.email ? user.email.charAt(0).toUpperCase() : "U";
@@ -37,11 +40,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* BOTÓN PERFIL / LOGIN (MÓVIL) */}
           <div>
             {user ? (
-              <Link href="/profile">
-                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 border border-blue-200 flex items-center justify-center font-bold shadow-sm">
-                  {inicial}
-                </div>
-              </Link>
+              !isProfilePage && (
+                <Link href="/profile">
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 border border-blue-200 flex items-center justify-center font-bold shadow-sm">
+                    {inicial}
+                  </div>
+                </Link>
+              )
             ) : (
               <Link href="/login" className="text-sm font-semibold text-blue-600 border border-blue-600 px-3 py-1.5 rounded-full hover:bg-blue-50 transition">
                 Entrar
@@ -53,18 +58,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* BOTÓN FLOTANTE PERFIL / LOGIN (DESKTOP) */}
         <div className="hidden lg:block absolute top-6 right-8 z-50">
           {user ? (
-            <Link 
-              href="/profile" 
-              className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-gray-200 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                {inicial}
-              </div>
-              <div className="flex flex-col">
-                 <span className="text-sm font-semibold text-gray-800">{user.email?.split("@")[0]}</span>
-                 <span className="text-xs text-gray-500">Ver perfil</span>
-              </div>
-            </Link>
+            !isProfilePage && (
+              <Link 
+                href="/profile" 
+                className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-gray-200 transition-all cursor-pointer group"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  {inicial}
+                </div>
+                <div className="flex flex-col">
+                   <span className="text-sm font-semibold text-gray-800">{user.email?.split("@")[0]}</span>
+                   <span className="text-xs text-gray-500">Ver perfil</span>
+                </div>
+              </Link>
+            )
           ) : (
             <Link 
               href="/login" 
