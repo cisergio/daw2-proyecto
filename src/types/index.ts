@@ -11,12 +11,14 @@ export type cliente = {
 export type Post = {
   id:string;
   creador: {
+    uid: string;
     nombre: string;
     usuario: string;
-    fotoPerfil:string;
+    fotoPerfil: string;
   }
   contenido: string;
   adjunto: string;
   likes: number;
   createdAt: Timestamp;
+  likedByMe?: boolean;
 };

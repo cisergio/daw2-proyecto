@@ -3,6 +3,9 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { usePost } from "../hooks/usePost";
 import { useAuth } from "../context/AuthProvider";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { darLike } from "./actions/darLike";
+import { toast } from "sonner";
 
 export default function Feed() {
   const { 
@@ -12,7 +15,8 @@ export default function Feed() {
     getInitialPosts, 
     getMorePosts, 
     pendingPosts, 
-    showNewPosts 
+    showNewPosts,
+    updatePost
   } = usePost();
   const { user } = useAuth();
   const router = useRouter();
@@ -61,6 +65,38 @@ export default function Feed() {
     [loading, hasMore, getMorePosts]
   );
 
+  const handleLike = async (e: React.MouseEvent, postId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.info("Inicia sesión para dar like");
+      router.push("/login");
+      return;
+    }
+
+    const result = await darLike(postId, user.uid);
+    if (result?.success) {
+      const isAdded = result.type === "added";
+      
+      // Actualizamos el estado local inmediatamente
+      updatePost(postId, {
+        likes: isAdded 
+          ? (posts.find(p => p.id === postId)?.likes || 0) + 1 
+          : Math.max(0, (posts.find(p => p.id === postId)?.likes || 0) - 1),
+        likedByMe: isAdded
+      });
+
+      if (isAdded) {
+        toast.success("¡Te gusta este post!");
+      } else {
+        toast.success("Has quitado tu like");
+      }
+    } else {
+      toast.error(result?.error || "Error al procesar el like");
+    }
+  };
+
   return (
     // Usa un contenedor de fondo gris claro de Tailwind para el diseño tipo feed
     <div className="min-h-screen bg-gray-100 py-8 px-4">
@@ -98,44 +134,87 @@ export default function Feed() {
               // ¡Aquí es donde atamos la función observadora al DOM si es el último!
               ref={isLastElement ? lastPostElementRef : null}
               // Tarjeta blanca y limpia al estilo de las clases de index.css
-              className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200"
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all active:scale-[0.99] group cursor-pointer relative overflow-hidden"
+              onClick={() => router.push(`/post/${post.id}`)}
             >
-              <div className="flex items-center space-x-3 mb-3">
-                {/* Avatar circular */}
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg overflow-hidden shrink-0">
-                  {post.creador?.fotoPerfil ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img 
-                      src={post.creador.fotoPerfil} 
-                      alt={post.creador.usuario || "Usuario"} 
-                      className="w-full h-full object-cover" 
-                    />
-                  ) : (
-                    post.creador ? post.creador.usuario.charAt(0).toUpperCase() : "?"
-                  )}
+              <div className="block p-5 h-full w-full">
+                <div className="flex items-center space-x-3 mb-3">
+                  {/* Avatar circular */}
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg overflow-hidden shrink-0">
+                    {post.creador?.fotoPerfil ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img 
+                        src={post.creador.fotoPerfil} 
+                        alt={post.creador.usuario || "Usuario"} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      post.creador ? post.creador.usuario.charAt(0).toUpperCase() : "?"
+                    )}
+                  </div>
+                  <div>
+                    <Link 
+                      href={`/profile/${post.creador?.uid}`} 
+                      className="font-semibold text-gray-800 hover:text-blue-600 hover:underline transition-colors relative z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      @{post.creador?.usuario || "anónimo"}
+                    </Link>
+                    <p className="text-xs text-gray-500">
+                      <ClientDate date={post.createdAt?.toDate?.()} />
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800">
-                    @{post.creador?.usuario || "anónimo"}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    <ClientDate date={post.createdAt?.toDate?.()} />
-                  </p>
+                
+                <p className="text-gray-700 whitespace-pre-wrap mb-4 group-hover:text-gray-900 transition-colors">
+                  {post.contenido}
+                </p>
+                
+                {post.adjunto && (
+                  <div className="rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={post.adjunto} 
+                      alt="Imagen adjunta" 
+                      className="w-full h-auto max-h-96 object-contain transition-transform duration-500 group-hover:scale-[1.01]"
+                    />
+                  </div>
+                )}
+                
+                {/* Action Bar */}
+                <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                  <button 
+                    onClick={(e) => handleLike(e, post.id)}
+                    className={`flex items-center space-x-2 transition-colors group/like relative z-10 ${
+                      post.likedByMe ? "text-red-500" : "text-gray-500 hover:text-red-500"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-full transition-colors ${
+                      post.likedByMe ? "bg-red-50" : "group-hover/like:bg-red-50"
+                    }`}>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        fill={post.likedByMe ? "currentColor" : "none"} 
+                        viewBox="0 0 24 24" 
+                        strokeWidth={1.5} 
+                        stroke="currentColor" 
+                        className={`w-5 h-5 transition-all group-active:scale-90 ${
+                          post.likedByMe ? "scale-110" : ""
+                        }`}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                    </div>
+                    <span className={`font-bold text-sm ${post.likedByMe ? "text-red-600" : ""}`}>
+                      {post.likes || 0}
+                    </span>
+                  </button>
+                  
+                  <div className="text-blue-600 font-semibold text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                    Leer más →
+                  </div>
                 </div>
               </div>
-              
-              <p className="text-gray-700 whitespace-pre-wrap">{post.contenido}</p>
-              
-              {post.adjunto && (
-                <div className="mt-4 rounded-xl overflow-hidden bg-gray-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={post.adjunto} 
-                    alt="Imagen adjunta" 
-                    className="w-full h-auto max-h-96 object-contain"
-                  />
-                </div>
-              )}
             </div>
           );
         })}

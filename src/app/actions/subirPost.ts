@@ -38,7 +38,7 @@ export default async function subirPost(formData: FormData, uid: string) {
       fotoPerfil: userData?.fotoPerfil || "",
       nombre: userData?.nombre || "Usuario",
       usuario: userData?.usuario || "anónimo",
-      uid: userData?.uid
+      uid: uid
     };
 
     /**

@@ -4,13 +4,38 @@ import Link from "next/link";
 import { useAuth } from "../context/AuthProvider";
 import { usePathname } from "next/navigation";
 import { useUsuario } from "@/hooks/useUsuarios";
+import { logout } from "@/app/actions/logout";
+import { auth } from "@/firebase/config";
+import { signOut } from "firebase/auth";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const isProfilePage = pathname === "/profile";
-  const uid = user?.uid
-  const { usuario } = useUsuario(uid)
+  const router = useRouter();
+  
+  // Verificamos si estamos en EL PERFIL PROPIO
+  // El pathname será /profile/[uid] gracias a nuestra refactorización anterior
+  const isMyProfilePage = user?.uid && pathname === `/profile/${user.uid}`;
+  
+  const uid = user?.uid;
+  const { usuario } = useUsuario(uid);
+
+  const handleLogout = async () => {
+    try {
+      // 1. Cerramos sesión en el servidor (borra cookies)
+      await logout();
+      // 2. Cerramos sesión en el cliente (Firebase Auth)
+      await signOut(auth);
+      
+      toast.success("Has cerrado sesión satisfactoriamente");
+      router.push("/login");
+    } catch (err) {
+      toast.error("Error al cerrar sesión");
+      console.error(err);
+    }
+  };
   // Extraemos la primera letra del email para usarla de foto de perfil temporal
   const inicial = usuario?.usuario ? usuario.usuario.charAt(0).toUpperCase() : "U";
 
@@ -42,13 +67,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* BOTÓN PERFIL / LOGIN (MÓVIL) */}
           <div>
             {user ? (
-              !isProfilePage && (
+              isMyProfilePage ? (
+                <button 
+                  onClick={handleLogout}
+                  className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center font-bold shadow-sm"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                  </svg>
+                </button>
+              ) : (
                 <Link href="/profile">
                   <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 border border-blue-200 flex items-center justify-center font-bold shadow-sm overflow-hidden">
                     {usuario?.fotoPerfil ? (
                       <img src={usuario.fotoPerfil} alt={usuario.usuario || "Perfil"} className="w-full h-full object-cover" />
                     ) : (
-                      inicial
+                      usuario?.usuario?.charAt(0).toUpperCase() || "U"
                     )}
                   </div>
                 </Link>
@@ -64,7 +98,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* BOTÓN FLOTANTE PERFIL / LOGIN (DESKTOP) */}
         <div className="hidden lg:block absolute top-6 right-8 z-50">
           {user ? (
-            !isProfilePage && (
+            isMyProfilePage ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-red-100 hover:bg-red-50 transition-all cursor-pointer group"
+              >
+                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg group-hover:bg-red-600 group-hover:text-white transition-colors overflow-hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                  </svg>
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-bold text-red-600">Cerrar Sesión</span>
+                  <span className="text-xs text-red-400">@{usuario?.usuario}</span>
+                </div>
+              </button>
+            ) : (
               <Link
                 href="/profile"
                 className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-gray-200 transition-all cursor-pointer group"
@@ -73,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   {usuario?.fotoPerfil ? (
                     <img src={usuario.fotoPerfil} alt={usuario.usuario || "Perfil"} className="w-full h-full object-cover" />
                   ) : (
-                    inicial
+                    usuario?.usuario?.charAt(0).toUpperCase() || "U"
                   )}
                 </div>
                 <div className="flex flex-col">

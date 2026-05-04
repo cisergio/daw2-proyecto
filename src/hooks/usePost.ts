@@ -10,7 +10,9 @@ import {
   getDocs,
   onSnapshot,
   where,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  getDoc,
+  doc
 } from "firebase/firestore";
 import type { DocumentData } from "firebase/firestore";
 import type { Post } from "../types";
@@ -137,7 +139,14 @@ export function usePost() {
     setPendingPosts([]);
     
     // Nota: El scroll hacia arriba debe dispararse en el componente que use esta función
-  }, [pendingPosts]);
+  }, [pendingPosts, setPosts]);
+
+  // 5. Función para actualizar un post específico (ej: likes)
+  const updatePost = useCallback((postId: string, newData: Partial<Post>) => {
+    setPosts((prev) => 
+      prev.map((p) => (p.id === postId ? { ...p, ...newData } : p))
+    );
+  }, [setPosts]);
 
   return {
     posts,
@@ -146,6 +155,115 @@ export function usePost() {
     getInitialPosts,
     getMorePosts,
     pendingPosts,
-    showNewPosts
+    showNewPosts,
+    updatePost
   };
+}
+
+
+/**
+ * Hook para obtener las publicaciones de un usuario específico.
+ * @param usuarioId ID del usuario (UID de Firebase Auth).
+ * @returns { posts, loading, error }
+ */
+export function useUserPosts(usuarioId: string | null | undefined) {
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!usuarioId) {
+            setLoading(false);
+            return;
+        }
+
+        const fetchPosts = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const collRef = collection(bd, "posts");
+
+                // Buscamos posts donde el creador sea el usuarioId
+                const q = query(
+                    collRef,
+                    where("creador.uid", "==", usuarioId),
+                    orderBy("createdAt", "desc"),
+                    limit(10)
+                );
+
+                const querySnapshot = await getDocs(q);
+                const postsList = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as Post[];
+
+                setPosts(postsList);
+
+                if (postsList.length === 0) {
+                    console.log("No se encontraron posts para el usuario:", usuarioId);
+                }
+            } catch (err: any) {
+                console.error("Error fetching user posts:", err);
+                setError("Error al cargar las publicaciones del usuario.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPosts();
+    }, [usuarioId]);
+
+    // Función para actualizar un post específico (ej: likes)
+    const updatePost = useCallback((postId: string, newData: Partial<Post>) => {
+        setPosts((prev) => 
+            prev.map((p) => (p.id === postId ? { ...p, ...newData } : p))
+        );
+    }, []);
+
+    return { posts, loading, error, updatePost };
+}
+
+/**
+ * Hook para obtener un post específico por su ID.
+ * @param idPost ID del post en Firestore.
+ * @returns { post, loading, error }
+ */
+export function usePostId(idPost: string | null | undefined) {
+  const [post, setPost] = useState<Post | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!idPost) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const docRef = doc(bd, "posts", idPost);
+    
+    // Suscripción en tiempo real para captar cambios (como likes) inmediatamente
+    const unsubscribe = onSnapshot(docRef, 
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setPost({ id: docSnap.id, ...docSnap.data() } as Post);
+        } else {
+          setError("No se encontró el post con el ID proporcionado.");
+        }
+        setLoading(false);
+      }, 
+      (err) => {
+        console.error("Error en la suscripción del post:", err);
+        setError("Error al cargar la publicación en tiempo real.");
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [idPost]);
+
+
+  return { post, error, loading };
 }
