@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthProvider";
 import { usePathname } from "next/navigation";
@@ -9,25 +9,37 @@ import { auth } from "@/firebase/config";
 import { signOut } from "firebase/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { User as UserIcon, LogOut, ChevronDown, LayoutGrid } from "lucide-react";
 
+/**
+ * DashboardLayout: Proporciona la estructura base de la aplicación.
+ * Incluye el encabezado móvil, la barra lateral/botones de navegación desktop,
+ * y gestiona el estado del menú de perfil con un patrón de "Overlay" para máxima compatibilidad.
+ */
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const pathname = usePathname();
   const router = useRouter();
-  
-  // Verificamos si estamos en EL PERFIL PROPIO
-  // El pathname será /profile/[uid] gracias a nuestra refactorización anterior
-  const isMyProfilePage = user?.uid && pathname === `/profile/${user.uid}`;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   const uid = user?.uid;
   const { usuario } = useUsuario(uid);
 
+  // Automatizar cierre al cambiar de ruta
+  const pathname = usePathname();
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
   const handleLogout = async () => {
     try {
-      // 1. Cerramos sesión en el servidor (borra cookies)
+      // 1. Cerramos sesión en el servidor (borra las cookies de sesión mediante Server Action)
       await logout();
-      // 2. Cerramos sesión en el cliente (Firebase Auth)
+      // 2. Cerramos sesión en el cliente (Firebase Auth se encarga de limpiar el estado local)
       await signOut(auth);
+      
+      // Cerramos el menú una vez completada la acción para evitar desequilibrios en el DOM
+      setIsMenuOpen(false);
       
       toast.success("Has cerrado sesión satisfactoriamente");
       router.push("/login");
@@ -36,59 +48,89 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       console.error(err);
     }
   };
-  // Extraemos la primera letra del email para usarla de foto de perfil temporal
-  const inicial = usuario?.usuario ? usuario.usuario.charAt(0).toUpperCase() : "U";
 
   return (
-    <div className="flex h-screen bg-gray-100 relative">
+    <div className="flex h-screen bg-slate-100 relative font-sans">
       <div className="flex flex-1 flex-col overflow-y-auto w-full relative">
         {/* ENCABEZADO MÓVIL (Visible solo en pantallas pequeñas) */}
-        <header className="sticky top-0 z-50 flex items-center justify-between border-b bg-white px-4 py-3 lg:hidden shadow-sm w-full">
-          <div className="flex items-center gap-3">
-            <span className="bg-blue-600 p-2 rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="white"
-                className="h-5 w-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
-                />
-              </svg>
+        <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-100 bg-white/80 backdrop-blur-md px-4 py-3 lg:hidden shadow-sm w-full">
+          <div className="flex items-center gap-2">
+            <span className="bg-midnight p-2 rounded-xl shadow-lg ring-4 ring-midnight/5">
+              <LayoutGrid className="w-5 h-5 text-gold" strokeWidth={3} />
             </span>
-            <span className="text-lg font-semibold text-gray-800">SocialClub</span>
+            <span className="text-xl font-black text-midnight tracking-tighter uppercase">SocialClub</span>
           </div>
 
-          {/* BOTÓN PERFIL / LOGIN (MÓVIL) */}
-          <div>
+          {/* BOTÓN PERFIL / LOGIN (MÓVIL) - Se muestra solo en dispositivos pequeños */}
+          <div className="relative lg:hidden">
             {user ? (
-              isMyProfilePage ? (
+              <>
+                {/* Avatar circular con efecto de scale en tap para feedback táctil */}
                 <button 
-                  onClick={handleLogout}
-                  className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center font-bold shadow-sm"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="w-10 h-10 rounded-full bg-midnight text-gold border border-white/10 flex items-center justify-center font-black shadow-lg overflow-hidden focus:outline-none transition-transform active:scale-90"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                  </svg>
+                  {usuario?.fotoPerfil ? (
+                    <img src={usuario.fotoPerfil} alt={usuario.usuario || "Perfil"} className="w-full h-full object-cover" />
+                  ) : (
+                    usuario?.usuario?.charAt(0).toUpperCase() || "U"
+                  )}
                 </button>
-              ) : (
-                <Link href="/profile">
-                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 border border-blue-200 flex items-center justify-center font-bold shadow-sm overflow-hidden">
-                    {usuario?.fotoPerfil ? (
-                      <img src={usuario.fotoPerfil} alt={usuario.usuario || "Perfil"} className="w-full h-full object-cover" />
-                    ) : (
-                      usuario?.usuario?.charAt(0).toUpperCase() || "U"
-                    )}
+
+                {/* 
+                  CAPA DE CIERRE (OVERLAY):
+                  Pattern de capa invisible para cerrar el menú al tocar fuera.
+                  Es la solución más robusta para móviles (evita interferencias de eventos mousedown/click).
+                */}
+                {isMenuOpen && (
+                  <div 
+                    className="fixed inset-0 z-[90] bg-black/5 backdrop-blur-sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMenuOpen(false);
+                    }} 
+                  />
+                )}
+
+                {/* 
+                  DESPLEGABLE MÓVIL (Premium Midnight Design):
+                  - Posicionamiento absoluto respecto al avatar.
+                  - onClick stopPropagation: Evita que el clic "atraviese" el menú hacia el overlay.
+                */}
+                {isMenuOpen && (
+                  <div 
+                    className="absolute right-0 mt-3 w-64 glass-midnight rounded-[2.5rem] py-3 z-[100] overflow-hidden animate-menu-appear-mobile origin-top-right border-2 border-gold/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="px-6 py-5 border-b border-white/10 mb-2">
+                       <p className="text-sm font-extrabold text-white truncate mb-0.5">{usuario?.nombre || usuario?.usuario}</p>
+                       <p className="text-[10px] text-gold font-black uppercase tracking-widest">Miembro Club</p>
+                    </div>
+
+                    <div className="px-3 space-y-2">
+                      {/* Botón de acceso al perfil con iconografía Lucide */}
+                      <button 
+                        onClick={() => router.push(`/profile/${user.uid}`)}
+                        className="flex items-center gap-4 px-5 py-4 text-sm font-black text-slate-100 hover:bg-gold hover:text-midnight active:scale-95 rounded-2xl transition-all duration-300 w-full text-left uppercase tracking-widest group"
+                      >
+                        <UserIcon className="w-5 h-5 text-gold group-hover:text-midnight" strokeWidth={3} />
+                        Mi Perfil
+                      </button>
+                      
+                      {/* Botón de salida con feedback destructivo (color rojo) */}
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-4 px-5 py-4 text-sm font-black text-red-400 hover:bg-red-500 hover:text-white active:scale-95 rounded-2xl transition-all duration-300 w-full text-left uppercase tracking-widest group"
+                      >
+                        <LogOut className="w-5 h-5" strokeWidth={3} />
+                        Salir del Club
+                      </button>
+                    </div>
                   </div>
-                </Link>
-              )
+                )}
+              </>
             ) : (
-              <Link href="/login" className="text-sm font-semibold text-blue-600 border border-blue-600 px-3 py-1.5 rounded-full hover:bg-blue-50 transition">
+              <Link href="/login" className="btn-premium px-5 py-2 !text-[9px]">
                 Entrar
               </Link>
             )}
@@ -98,51 +140,79 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* BOTÓN FLOTANTE PERFIL / LOGIN (DESKTOP) */}
         <div className="hidden lg:block absolute top-6 right-8 z-50">
           {user ? (
-            isMyProfilePage ? (
+            <div className="relative">
               <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-red-100 hover:bg-red-50 transition-all cursor-pointer group"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`flex items-center gap-3 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border transition-all cursor-pointer group focus:outline-none ${isMenuOpen ? "border-gold ring-4 ring-gold-soft/30" : "border-slate-200"}`}
               >
-                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg group-hover:bg-red-600 group-hover:text-white transition-colors overflow-hidden">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                  </svg>
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-sm font-bold text-red-600">Cerrar Sesión</span>
-                  <span className="text-xs text-red-400">@{usuario?.usuario}</span>
-                </div>
-              </button>
-            ) : (
-              <Link
-                href="/profile"
-                className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md border border-gray-200 transition-all cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg group-hover:bg-blue-600 group-hover:text-white transition-colors overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-midnight text-gold flex items-center justify-center font-black text-lg group-hover:bg-gold transition-colors overflow-hidden border border-white/10">
                   {usuario?.fotoPerfil ? (
                     <img src={usuario.fotoPerfil} alt={usuario.usuario || "Perfil"} className="w-full h-full object-cover" />
                   ) : (
                     usuario?.usuario?.charAt(0).toUpperCase() || "U"
                   )}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-gray-800">{"@" + usuario?.usuario}</span>
-                  <span className="text-xs text-gray-500">Ver perfil</span>
+                <div className="flex flex-col text-left">
+                  <span className="text-sm font-black text-midnight tracking-tight">{"@" + usuario?.usuario}</span>
+                  <div className="flex items-center gap-1">
+                    <ChevronDown className={`w-3 h-3 text-gold transition-transform duration-300 ${isMenuOpen ? "rotate-180" : ""}`} strokeWidth={3} />
+                  </div>
                 </div>
-              </Link>
-            )
+              </button>
+
+              {/* OVERLAY DESKTOP */}
+              {isMenuOpen && (
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsMenuOpen(false)} 
+                />
+              )}
+
+              {/* DESPLEGABLE DESKTOP */}
+              {isMenuOpen && (
+                <div 
+                  className="absolute right-0 mt-3 w-64 glass-midnight rounded-[2rem] py-2 z-50 overflow-hidden animate-menu-appear origin-top-right shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-6 py-5 border-b border-white/10 mb-2">
+                    <p className="text-gold font-black uppercase tracking-[0.2em] text-[10px] mb-1">Miembro Club</p>
+                    <p className="text-sm font-extrabold text-white truncate">{usuario?.nombre || usuario?.usuario}</p>
+                    <p className="text-xs text-slate-400 truncate font-medium">@{usuario?.usuario}</p>
+                  </div>
+                  
+                  <div className="px-3 space-y-1">
+                    <Link 
+                      href={`/profile/${user.uid}`}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-xs font-black text-slate-200 hover:bg-gold hover:text-midnight rounded-2xl transition-all duration-300 group/item uppercase tracking-widest"
+                    >
+                      <UserIcon className="w-4 h-4 text-gold group-hover:text-midnight" strokeWidth={3} />
+                      Ver mi perfil
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-4 py-3 text-xs font-black text-red-400 hover:bg-red-500 hover:text-white rounded-2xl transition-all duration-300 w-full text-left group/item uppercase tracking-widest"
+                    >
+                      <LogOut className="w-4 h-4" strokeWidth={3} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Link
               href="/login"
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all"
+              className="btn-premium"
             >
               Iniciar Sesión
             </Link>
           )}
         </div>
 
-        {/* CONTENIDO PRINCIPAL */}
-        <main className="flex-1 w-full pt-4 sm:pt-8 bg-gray-100 pb-20">
+        {/* CONTENIDO PRINCIPAL: bg-slate-100 para contraste con cards blancas */}
+        <main className="flex-1 w-full pt-4 sm:pt-8 bg-slate-100 pb-20">
           {children}
         </main>
       </div>

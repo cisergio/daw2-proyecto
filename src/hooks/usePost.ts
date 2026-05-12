@@ -267,3 +267,44 @@ export function usePostId(idPost: string | null | undefined) {
 
   return { post, error, loading };
 }
+
+/**
+ * Hook para verificar si un usuario le ha dado like a un post específico.
+ * @param postId ID del post.
+ * @param userId ID del usuario actual.
+ * @returns { isLiked, loading }
+ */
+export function useLikeStatus(postId: string, userId: string | null | undefined) {
+  const [isLiked, setIsLiked] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    // Si no hay post o no hay usuario, el estado es falso por defecto
+    if (!postId || !userId) {
+      setIsLiked(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    
+    // Referencia al documento de la subcolección de likes
+    const likeRef = doc(bd, "posts", postId, "likes", userId);
+    
+    // Suscripción en tiempo real para detectar cambios (dar/quitar like)
+    const unsubscribe = onSnapshot(likeRef, 
+      (docSnap) => {
+        setIsLiked(docSnap.exists());
+        setLoading(false);
+      }, 
+      (err) => {
+        console.error("Error en useLikeStatus:", err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [postId, userId]);
+
+  return { isLiked, loading };
+}

@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "../../../context/AuthProvider";
 import { useUsuario } from "../../../hooks/useUsuarios";
 import { useUserPosts } from "../../../hooks/usePost";
-import { darLike } from "../../actions/darLike";
 import { toast } from "sonner";
+import LikeButton from "../../../components/LikeButton";
+import { ArrowLeft, Settings, Calendar } from "lucide-react";
 
 export default function UserProfilePage() {
   const { uid } = useParams();
@@ -15,48 +16,17 @@ export default function UserProfilePage() {
   
   // Cargamos los datos del usuario especificado en la URL
   const { usuario: userData, loading: loadingUser, error: errorUser } = useUsuario(uid as string);
-  const { posts, loading: loadingPosts, error: errorPosts, updatePost } = useUserPosts(uid as string);
+  const { posts, loading: loadingPosts, error: errorPosts } = useUserPosts(uid as string);
 
   const isMyProfile = user?.uid === uid;
 
-  const handleLike = async (e: React.MouseEvent, postId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      toast.info("Inicia sesión para dar like");
-      router.push("/login");
-      return;
-    }
-
-    const result = await darLike(postId, user.uid);
-    if (result?.success) {
-      const isAdded = result.type === "added";
-      
-      updatePost(postId, {
-        likes: isAdded 
-          ? (posts.find(p => p.id === postId)?.likes || 0) + 1 
-          : Math.max(0, (posts.find(p => p.id === postId)?.likes || 0) - 1),
-        likedByMe: isAdded
-      });
-
-      if (isAdded) {
-        toast.success("¡Te gusta este post!");
-      } else {
-        toast.success("Has quitado tu like");
-      }
-    } else {
-      toast.error(result?.error || "Error al procesar el like");
-    }
-  };
-
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="w-32 h-32 bg-gray-200 rounded-full mb-4"></div>
-          <div className="h-4 w-48 bg-gray-200 rounded mb-2"></div>
-          <div className="h-3 w-32 bg-gray-200 rounded"></div>
+          <div className="w-40 h-40 bg-slate-200 rounded-full mb-6"></div>
+          <div className="h-6 w-64 bg-slate-200 rounded-2xl mb-3"></div>
+          <div className="h-4 w-40 bg-slate-200 rounded-2xl"></div>
         </div>
       </div>
     );
@@ -64,37 +34,52 @@ export default function UserProfilePage() {
 
   if (errorUser && !userData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 max-w-md w-full">
-          <h1 className="text-xl font-bold text-red-600 mb-2">Usuario no encontrado</h1>
-          <p className="text-gray-600 mb-6">{errorUser}</p>
-          <Link href="/" className="text-blue-600 hover:underline font-medium">Volver al Feed</Link>
+      <div className="form-container text-center">
+        <div className="form-card">
+          <h1 className="text-2xl font-black text-red-600 mb-3 tracking-tight">Usuario no encontrado</h1>
+          <p className="form-subtitle">{errorUser}</p>
+          <Link href="/" className="btn-premium inline-flex mt-6">Volver al Feed</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    /* bg-slate-100: Consistencia premium en toda la app */
+    <main className="min-h-screen bg-slate-100 pb-20 font-sans">
       {/* Header / Portada */}
-      <div className="h-48 md:h-64 bg-gradient-to-r from-blue-600 to-indigo-700 relative">
-        {userData?.fotoPortada && (
+      <div className="h-64 md:h-80 bg-midnight relative overflow-hidden">
+        {/* Botón Volver */}
+        <Link 
+          href="/" 
+          className="absolute top-6 left-6 md:top-8 md:left-8 z-30 flex items-center group"
+        >
+          <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 group-hover:bg-gold group-hover:border-gold transition-all duration-500 shadow-2xl">
+            <ArrowLeft className="w-5 h-5 text-white group-hover:text-midnight transition-colors" strokeWidth={3} />
+          </div>
+          <span className="ml-4 text-white font-black tracking-tighter opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">VOLVER AL FEED</span>
+        </Link>
+
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-midnight/80"></div>
+        {userData?.fotoPortada ? (
           <img 
             src={userData.fotoPortada} 
             alt="Portada" 
-            className="w-full h-full object-cover opacity-60"
+            className="w-full h-full object-cover opacity-50"
           />
+        ) : (
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-gold/20 via-transparent to-transparent"></div>
         )}
       </div>
 
       {/* Info de Perfil */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-          <div className="p-6 sm:p-10">
-            <div className="flex flex-col md:flex-row items-center md:items-end md:justify-between space-y-4 md:space-y-0">
-              {/* Foto de Perfil */}
-              <div className="relative group">
-                <div className="w-40 h-40 rounded-full border-8 border-white bg-blue-100 flex items-center justify-center overflow-hidden shadow-lg">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10">
+        <div className="card-premium">
+          {/* Header Responsivo: Se adapta de columna en móvil a fila en desktop */}
+          <div className="p-8 sm:p-12 flex flex-col md:flex-row items-center md:items-end gap-8 md:gap-10">
+            {/* Foto de Perfil */}
+            <div className="relative group">
+              <div className="w-32 h-32 md:w-48 md:h-48 rounded-full border-[6px] md:border-[10px] border-white bg-midnight flex items-center justify-center overflow-hidden shadow-2xl transition-transform duration-500 group-hover:scale-105">
                   {userData?.fotoPerfil ? (
                     <img 
                       src={userData.fotoPerfil} 
@@ -102,7 +87,7 @@ export default function UserProfilePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-5xl font-bold text-blue-600">
+                    <span className="text-6xl font-black text-gold tracking-tighter">
                       {userData?.nombre?.[0]?.toUpperCase() || userData?.usuario?.[0]?.toUpperCase()}
                     </span>
                   )}
@@ -110,130 +95,114 @@ export default function UserProfilePage() {
               </div>
 
               {/* Acciones */}
-              <div className="flex space-x-3">
+              <div className="flex space-x-4">
                 {isMyProfile ? (
                   <>
-                    <button className="px-6 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg active:scale-95">
+                    <button className="btn-premium">
                       Editar Perfil
                     </button>
-                    <button className="p-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition">
-                      <SettingsIcon className="w-6 h-6" />
+                    <button className="btn-ghost !p-4">
+                      <Settings className="w-6 h-6" strokeWidth={2} />
                     </button>
                   </>
                 ) : (
-                  <button className="px-8 py-2.5 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-all shadow-md hover:shadow-lg active:scale-95">
-                    Seguir
+                  <button className="btn-premium px-10 py-4 !text-xs">
+                    Seguir Miembro
                   </button>
                 )}
               </div>
             </div>
 
             {/* Texto y Bio */}
-            <div className="mt-8 text-center md:text-left">
-              <h1 className="text-3xl font-extrabold text-gray-900 leading-tight">
+            <div className="mt-8 md:mt-10 text-center md:text-left">
+              <h1 className="text-3xl md:text-5xl font-black text-midnight tracking-tighter leading-none mb-2 px-4 md:px-0">
                 {userData?.nombre} {userData?.apellidos}
               </h1>
-              <p className="text-lg text-gray-500 font-medium tracking-tight">
-                @{userData?.usuario || userData?.uaurio || "usuario"}
+              <p className="text-xl text-gold font-black tracking-tight mb-6">
+                @{userData?.usuario || "usuario"}
               </p>
               
               {userData?.biografia && (
-                <p className="mt-4 text-gray-700 max-w-2xl leading-relaxed">
-                  {userData.biografia}
+                <p className="mt-6 text-slate-600 max-w-2xl leading-relaxed text-lg font-medium italic">
+                  "{userData.biografia}"
                 </p>
               )}
 
-              <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-6 text-sm text-gray-500">
-                <div className="flex items-center">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  Se unió <LocalClientDate timestamp={userData?.creacion} />
+              <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-8">
+                <div className="flex items-center text-gold-accent">
+                  <Calendar className="w-4 h-4 mr-2.5 text-gold" strokeWidth={2} />
+                  Se unió <span className="ml-1.5 text-slate-600"><LocalClientDate timestamp={userData?.creacion} /></span>
                 </div>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="mt-10 grid grid-cols-3 divide-x divide-gray-100 border-t border-gray-100 pt-8">
-              <div className="text-center group cursor-pointer">
-                <div className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition">{posts.length}</div>
-                <div className="text-xs uppercase tracking-wider text-gray-500 font-bold">Posts</div>
+            <div className="mt-10 md:mt-12 grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 pt-8 md:pt-10">
+              <div className="text-center group cursor-pointer px-2">
+                <div className="text-xl md:text-3xl font-black text-midnight group-hover:text-gold transition-colors tracking-tighter">{posts.length}</div>
+                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60">Posts</div>
               </div>
-              <div className="text-center group cursor-pointer">
-                <div className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition">
+              <div className="text-center group cursor-pointer px-2">
+                <div className="text-xl md:text-3xl font-black text-midnight group-hover:text-gold transition-colors tracking-tighter">
                   {userData?.seguidores || 0}
                 </div>
-                <div className="text-xs uppercase tracking-wider text-gray-500 font-bold">Seguidores</div>
+                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60">Seguidores</div>
               </div>
-              <div className="text-center group cursor-pointer">
-                <div className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition">
+              <div className="text-center group cursor-pointer px-2">
+                <div className="text-xl md:text-3xl font-black text-midnight group-hover:text-gold transition-colors tracking-tighter">
                   {userData?.seguidos || 0}
                 </div>
-                <div className="text-xs uppercase tracking-wider text-gray-500 font-bold">Seguidos</div>
+                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60">Seguidos</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Listado de Posts */}
-        <div className="mt-12 space-y-8">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+        <div className="mt-20 space-y-10">
+          <div className="flex items-center justify-between px-4">
+            <h2 className="text-2xl md:text-3xl font-black text-midnight tracking-tighter flex items-center">
               Publicaciones
-              <span className="ml-3 px-2.5 py-0.5 bg-blue-100 text-blue-700 text-sm rounded-full">{posts.length}</span>
+              <span className="ml-4 md:ml-5 px-3 md:px-4 py-1 bg-gold-soft text-gold text-[10px] md:text-xs font-black rounded-full shadow-sm ring-1 ring-gold/10 tabular-nums">{posts.length}</span>
             </h2>
           </div>
 
           {loadingPosts ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-48 bg-white rounded-2xl animate-pulse border border-gray-100"></div>
+                <div key={i} className="h-64 bg-white rounded-[2.5rem] animate-pulse border border-slate-100 shadow-sm"></div>
               ))}
             </div>
           ) : posts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {posts.map((post) => (
-                <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all group cursor-pointer active:scale-[0.99] relative overflow-hidden">
-                  <Link href={`/post/${post.id}`} className="block p-6 h-full w-full">
-                    <p className="text-gray-800 line-clamp-3 mb-4 group-hover:text-black transition-colors">{post.contenido}</p>
+                <div key={post.id} className="card-premium hover:border-gold/30 group cursor-pointer relative flex flex-col">
+                  <Link href={`/post/${post.id}`} className="block p-6 md:p-8 h-full w-full">
+                    <p className="text-slate-700 text-base md:text-lg font-medium leading-relaxed line-clamp-4 mb-6 md:mb-8 group-hover:text-midnight transition-colors">{post.contenido}</p>
                     {post.adjunto && (
-                      <div className="aspect-video rounded-xl overflow-hidden mb-4 bg-gray-50 border border-gray-100">
-                        <img src={post.adjunto} alt="Post content" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      <div className="aspect-[16/10] rounded-2xl overflow-hidden mb-8 bg-slate-50 border border-slate-100 p-1">
+                        <img src={post.adjunto} alt="Post content" className="w-full h-full object-cover rounded-[1.25rem] group-hover:scale-105 transition duration-1000" />
                       </div>
                     )}
-                    <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
-                      <button 
-                        onClick={(e) => handleLike(e, post.id)}
-                        className={`flex items-center space-x-1.5 transition-colors group/like ${
-                          post.likedByMe ? "text-red-500" : "text-gray-400 hover:text-red-500"
-                        }`}
-                      >
-                        <HeartIcon className={`w-4 h-4 transition-all group-active/like:scale-90 ${
-                          post.likedByMe ? "fill-red-500" : ""
-                        }`} /> 
-                        <span className={`font-bold ${post.likedByMe ? "text-red-600" : ""}`}>
-                          {post.likes || 0}
-                        </span>
-                      </button>
-                      <span className="group-hover:text-gray-600 transition-colors"><LocalClientDate timestamp={post.createdAt} /></span>
+                    <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-50">
+                      <LikeButton postId={post.id} initialLikes={post.likes} />
+                      <span className="text-gold-accent opacity-50 group-hover:opacity-100 transition-opacity"><LocalClientDate timestamp={post.createdAt} /></span>
                     </div>
                   </Link>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="bg-white p-16 rounded-3xl text-center border-2 border-dashed border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">No hay publicaciones aún</h3>
+            <div className="card-premium p-20 text-center border-4 border-dashed border-slate-100 bg-transparent flex flex-col items-center justify-center">
+              <h3 className="text-2xl font-black text-midnight tracking-tighter mb-3">No hay publicaciones aún</h3>
+              <p className="text-gold-accent opacity-40">Este miembro está siendo discreto</p>
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </main>
   );
 }
 
-// Componentes Icono internos
-function SettingsIcon({ className }: { className: string }) { return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>; }
-function CalendarIcon({ className }: { className: string }) { return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>; }
-function HeartIcon({ className }: { className: string }) { return <svg className={className} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>; }
 
 // Helper para fechas local
 function LocalClientDate({ timestamp }: { timestamp: any }) {

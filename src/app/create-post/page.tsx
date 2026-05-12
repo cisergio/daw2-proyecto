@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthProvider";
 import subirPost from "../actions/subirPost";
+import { ArrowLeft, X, Image as ImageIcon, Loader2 } from "lucide-react";
 
 export default function CreatePostPage() {
   const { user } = useAuth(); // Obtenemos el usuario actual de nuestro contexto de autenticación
@@ -100,104 +101,106 @@ export default function CreatePostPage() {
   // Mientras verificamos si el usuario está cargando, mostramos un estado neutro
   if (user === undefined) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-pulse text-gray-400 font-medium">Verificando sesión...</div>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="animate-pulse text-slate-400 font-bold uppercase tracking-widest text-[10px] md:text-xs">Verificando sesión...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex flex-col items-center">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    /* bg-slate-100: Fondo premium para el formulario */
+    <main className="form-container">
+      <div className="max-w-2xl w-full px-4">
+      <div className="card-premium w-full max-w-2xl !rounded-none md:!rounded-[2.5rem]">
         {/* Cabecera con botón de volver */}
-        <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+        <div className="p-6 md:p-8 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-sm sticky top-0 z-10">
           <Link 
             href="/" 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+            className="btn-ghost group"
             title="Cancelar y volver al feed"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
           </Link>
-          <h1 className="text-xl font-bold text-gray-800">¿Qué quieres contar?</h1>
-          <div className="w-10"></div>
+          <h1 className="form-title !text-2xl !mb-0">Nueva Publicación</h1>
+          <div className="w-12"></div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 md:p-10 space-y-8 md:space-y-10">
+          <div className="card-premium !md:rounded-[3rem]">
+          <div className="p-8 md:p-16">
+            <h1 className="form-title !text-3xl md:!text-5xl">Crear Post</h1>
+          </div>
+          </div>
           {/* Campo de texto principal */}
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="¡Cuéntanos algo interesante!"
-            className="w-full min-h-[160px] text-lg text-gray-800 placeholder-gray-400 border-none focus:ring-0 resize-none"
-            maxLength={280}
-            disabled={isPending}
-          />
+          <div className="space-y-2">
+            <label className="input-label">Contenido de la publicación</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="¿Qué tienes en mente hoy?"
+              className="!min-h-[200px] md:!min-h-[250px] text-lg md:text-xl"
+              maxLength={280}
+              disabled={isPending}
+            />
+          </div>
 
           {/* Área de previsualización de imagen */}
           {imagePreview && (
-            <div className="relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-inner">
-              <img src={imagePreview} alt="Tu foto" className="w-full max-h-[450px] object-contain mx-auto" />
+            <div className="relative rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden bg-slate-50 border border-slate-100 shadow-inner group/img p-2">
+              <img src={imagePreview as string} alt="Tu foto" className="w-full max-h-[400px] md:max-h-[500px] object-contain mx-auto rounded-[1.3rem] md:rounded-[2.3rem] transition-transform duration-700 group-hover/img:scale-105" />
               <button
                 type="button"
                 onClick={removeImage}
                 disabled={isPending}
-                className="absolute top-4 right-4 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-md transition-all active:scale-90"
+                className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-midnight/90 hover:bg-red-600 text-white rounded-xl md:rounded-2xl backdrop-blur-md transition-all active:scale-90 shadow-xl border border-white/10"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" strokeWidth={3} />
               </button>
             </div>
           )}
 
           {/* Barra de herramientas inferior */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between pt-8 border-t border-slate-50">
+            <div className="flex items-center gap-3">
               <input type="file" accept="image/*" onChange={handleImageChange} ref={fileInputRef} className="hidden" />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending}
-                className="p-3 text-blue-600 hover:bg-blue-50 rounded-full transition-all active:scale-95"
+                className="btn-secondary !p-4"
                 title="Añadir una imagen a tu post"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
+                <ImageIcon className="w-6 h-6" strokeWidth={2.5} />
               </button>
             </div>
 
             <button
               type="submit"
               disabled={isPending || (!content.trim() && !imageFile)}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-full transition-all shadow-lg active:scale-95 flex items-center gap-2"
+              className="form-button !w-auto px-10"
             >
               {isPending && (
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <Loader2 className="animate-spin h-5 w-5 mr-3" />
               )}
-              {isPending ? "Publicando..." : "Publicar Ahora"}
+              {isPending ? "Subiendo..." : "Publicar Ahora"}
             </button>
           </div>
         </form>
       </div>
 
       {/* Contador de caracteres humanizado */}
-      <div className="mt-8 flex items-center gap-2 text-sm">
-        <div className={`h-1 w-24 rounded-full bg-gray-200 overflow-hidden`}>
+      <div className="mt-8 md:mt-10 flex items-center gap-4 text-xs">
+        <div className={`h-2 w-24 md:w-32 rounded-full bg-slate-200 overflow-hidden shadow-inner`}>
           <div 
-            className={`h-full transition-all duration-300 ${content.length > 250 ? 'bg-red-400' : 'bg-blue-400'}`} 
+            className={`h-full transition-all duration-500 ease-out ${content.length > 250 ? 'bg-red-500' : 'bg-gold'}`} 
             style={{ width: `${(content.length / 280) * 100}%` }}
           ></div>
         </div>
-        <span className={`${content.length > 250 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-          {280 - content.length} caracteres restantes
+        <span className={`font-black uppercase tracking-wider ${content.length > 250 ? 'text-red-500 scale-110 transition-transform' : 'text-slate-400'}`}>
+          {280 - content.length}
         </span>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -4,8 +4,8 @@ import { usePost } from "../hooks/usePost";
 import { useAuth } from "../context/AuthProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { darLike } from "./actions/darLike";
-import { toast } from "sonner";
+import LikeButton from "../components/LikeButton";
+import { ArrowUp, Plus } from "lucide-react";
 
 export default function Feed() {
   const { 
@@ -15,8 +15,7 @@ export default function Feed() {
     getInitialPosts, 
     getMorePosts, 
     pendingPosts, 
-    showNewPosts,
-    updatePost
+    showNewPosts
   } = usePost();
   const { user } = useAuth();
   const router = useRouter();
@@ -65,59 +64,20 @@ export default function Feed() {
     [loading, hasMore, getMorePosts]
   );
 
-  const handleLike = async (e: React.MouseEvent, postId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!user) {
-      toast.info("Inicia sesión para dar like");
-      router.push("/login");
-      return;
-    }
-
-    const result = await darLike(postId, user.uid);
-    if (result?.success) {
-      const isAdded = result.type === "added";
-      
-      // Actualizamos el estado local inmediatamente
-      updatePost(postId, {
-        likes: isAdded 
-          ? (posts.find(p => p.id === postId)?.likes || 0) + 1 
-          : Math.max(0, (posts.find(p => p.id === postId)?.likes || 0) - 1),
-        likedByMe: isAdded
-      });
-
-      if (isAdded) {
-        toast.success("¡Te gusta este post!");
-      } else {
-        toast.success("Has quitado tu like");
-      }
-    } else {
-      toast.error(result?.error || "Error al procesar el like");
-    }
-  };
-
   return (
-    // Usa un contenedor de fondo gris claro de Tailwind para el diseño tipo feed
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Feed</h1>
+    /* bg-slate-100: Proporciona contraste premium con las cards blancas */
+    <div className="min-h-screen bg-slate-100 py-6 md:py-12 px-4 font-sans">
+      <div className="max-w-xl mx-auto space-y-6 md:space-y-8">
+        <h1 className="text-3xl md:text-5xl font-black text-midnight mb-6 md:mb-10 text-center tracking-tighter">Feed</h1>
         
         {/* NOTIFICACIÓN DE POSTS NUEVOS (Estilo Twitter Premium) */}
         {pendingPosts.length > 0 && (
           <div className="notification-badge-float animate-slide-down-fade">
             <button
               onClick={handleUpdateFeed}
-              className="bg-blue-600/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-blue-700 transition-all hover:scale-105 active:scale-95 font-semibold flex items-center gap-2 border border-white/20 ring-4 ring-blue-600/10"
+              className="bg-midnight/90 backdrop-blur-md text-gold-light px-6 py-3 rounded-full shadow-2xl hover:bg-gold hover:text-midnight transition-all hover:scale-105 active:scale-95 font-bold flex items-center gap-3 border border-white/10 ring-4 ring-midnight/5"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 20 20" 
-                fill="currentColor" 
-                className="w-5 h-5 animate-bounce"
-              >
-                <path fillRule="evenodd" d="M10 17a.75.75 0 0 1-.75-.75V5.612L5.29 9.77a.75.75 0 0 1-1.08-1.04l5.25-5.5a.75.75 0 0 1 1.08 0l5.25 5.5a.75.75 0 1 1-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0 1 10 17Z" clipRule="evenodd" />
-              </svg>
+              <ArrowUp className="w-5 h-5 animate-bounce" />
               <span>Mostrar {pendingPosts.length} {pendingPosts.length === 1 ? "publicación nueva" : "publicaciones nuevas"}</span>
             </button>
           </div>
@@ -133,14 +93,13 @@ export default function Feed() {
               key={post.id} 
               // ¡Aquí es donde atamos la función observadora al DOM si es el último!
               ref={isLastElement ? lastPostElementRef : null}
-              // Tarjeta blanca y limpia al estilo de las clases de index.css
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:border-blue-200 hover:shadow-md transition-all active:scale-[0.99] group cursor-pointer relative overflow-hidden"
+              className="card-premium hover:border-gold/30 group cursor-pointer relative"
               onClick={() => router.push(`/post/${post.id}`)}
             >
-              <div className="block p-5 h-full w-full">
-                <div className="flex items-center space-x-3 mb-3">
+              <div className="block p-6 md:p-10 h-full w-full">
+                <div className="flex items-center space-x-5 mb-6">
                   {/* Avatar circular */}
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg overflow-hidden shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-midnight flex items-center justify-center text-gold font-black text-2xl overflow-hidden shrink-0 border border-white/10 shadow-xl transition-transform group-hover:rotate-3 group-hover:scale-110">
                     {post.creador?.fotoPerfil ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img 
@@ -155,62 +114,37 @@ export default function Feed() {
                   <div>
                     <Link 
                       href={`/profile/${post.creador?.uid}`} 
-                      className="font-semibold text-gray-800 hover:text-blue-600 hover:underline transition-colors relative z-10"
+                      className="font-black text-midnight hover:text-gold hover:underline transition-colors relative z-10 text-xl tracking-tighter"
                       onClick={(e) => e.stopPropagation()}
                     >
                       @{post.creador?.usuario || "anónimo"}
                     </Link>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-gold-accent mt-0.5">
                       <ClientDate date={post.createdAt?.toDate?.()} />
                     </p>
                   </div>
                 </div>
                 
-                <p className="text-gray-700 whitespace-pre-wrap mb-4 group-hover:text-gray-900 transition-colors">
+                <p className="text-slate-700 text-xl leading-relaxed whitespace-pre-wrap mb-8 group-hover:text-midnight transition-colors">
                   {post.contenido}
                 </p>
                 
-                {post.adjunto && (
-                  <div className="rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                 {post.adjunto && (
+                   <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-slate-50 border border-slate-100 shadow-inner p-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */
                     <img 
                       src={post.adjunto} 
                       alt="Imagen adjunta" 
-                      className="w-full h-auto max-h-96 object-contain transition-transform duration-500 group-hover:scale-[1.01]"
-                    />
+                      className="w-full h-auto max-h-[25rem] md:max-h-[30rem] object-contain rounded-[1.3rem] md:rounded-[1.8rem] transition-transform duration-1000 group-hover:scale-[1.02]"
+                    />}
                   </div>
                 )}
                 
                 {/* Action Bar */}
-                <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-                  <button 
-                    onClick={(e) => handleLike(e, post.id)}
-                    className={`flex items-center space-x-2 transition-colors group/like relative z-10 ${
-                      post.likedByMe ? "text-red-500" : "text-gray-500 hover:text-red-500"
-                    }`}
-                  >
-                    <div className={`p-2 rounded-full transition-colors ${
-                      post.likedByMe ? "bg-red-50" : "group-hover/like:bg-red-50"
-                    }`}>
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        fill={post.likedByMe ? "currentColor" : "none"} 
-                        viewBox="0 0 24 24" 
-                        strokeWidth={1.5} 
-                        stroke="currentColor" 
-                        className={`w-5 h-5 transition-all group-active:scale-90 ${
-                          post.likedByMe ? "scale-110" : ""
-                        }`}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                      </svg>
-                    </div>
-                    <span className={`font-bold text-sm ${post.likedByMe ? "text-red-600" : ""}`}>
-                      {post.likes || 0}
-                    </span>
-                  </button>
+                <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+                  <LikeButton postId={post.id} initialLikes={post.likes} />
                   
-                  <div className="text-blue-600 font-semibold text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="text-gold font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
                     Leer más →
                   </div>
                 </div>
@@ -221,48 +155,40 @@ export default function Feed() {
         
         {/* Indicador de carga (Spinner) que se muestra durante la peticion */}
         {loading && (
-          <div className="flex justify-center p-6">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="flex justify-center p-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold shadow-sm"></div>
           </div>
         )}
         
         {/* Texto amigable cuando no hay más posts que cargar */}
         {!hasMore && posts.length > 0 && (
-          <p className="text-center text-gray-500 py-6 font-medium">
-            No hay más publicaciones.
+          <p className="text-center text-slate-400 py-16 font-black uppercase tracking-[0.3em] text-[10px]">
+            Fin de la transmisión
           </p>
         )}
 
         {/* Mensaje de vacío si no existe ningún post */}
         {!loading && posts.length === 0 && (
-          <p className="text-center text-gray-500 py-6 font-medium">
+          <p className="text-center text-slate-400 py-20 font-black uppercase tracking-widest text-xs">
             ¡Aún no hay publicaciones en el feed!
           </p>
         )}
       </div>
 
       {/* Botón flotante para crear post */}
+      {/* 
+          BOTÓN FLOTANTE:
+          Posicionado estratégicamente para pulgar derecho en móvil (bottom-24)
+          y alineado a la derecha en PC (bottom-10 md:right-10) para evitar estiramientos no deseados.
+      */}
       <button
         onClick={handleCreatePost}
-        className="fixed bottom-8 left-8 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 z-40 group"
+        className="btn-premium fixed bottom-24 right-6 md:bottom-10 md:right-10 px-5 py-5 md:px-6 md:py-6 !rounded-2xl md:!rounded-[2rem] z-40 group hover:scale-110 shadow-2xl"
         aria-label="Crear nueva publicación"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-8 h-8"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 4.5v15m7.5-7.5h-15"
-          />
-        </svg>
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-semibold whitespace-nowrap">
-          Nueva Publicación
+        <Plus className="w-7 h-7" strokeWidth={3} />
+        <span className="max-w-0 overflow-hidden group-hover:max-w-xs group-hover:ml-4 transition-all duration-700 font-black whitespace-nowrap text-lg tracking-tighter">
+          NUEVO POST
         </span>
       </button>
     </div>

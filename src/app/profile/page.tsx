@@ -22,10 +22,10 @@ export default function ProfilePage() {
   }, [user, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
       <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="text-gray-500 font-medium animate-pulse">Cargando tu perfil...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold shadow-sm"></div>
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Cargando tu perfil...</p>
       </div>
     </div>
   );
