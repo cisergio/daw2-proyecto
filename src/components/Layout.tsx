@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   >
                     <div className="px-6 py-5 border-b border-white/10 mb-2">
                        <p className="text-sm font-extrabold text-white truncate mb-0.5">{usuario?.nombre || usuario?.usuario}</p>
-                       <p className="text-[10px] text-gold font-black uppercase tracking-widest">Miembro Club</p>
+                       <p className="text-[10px] text-gold font-black uppercase tracking-widest">Usuario</p>
                     </div>
 
                     <div className="px-3 space-y-2">
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         className="flex items-center gap-4 px-5 py-4 text-sm font-black text-red-400 hover:bg-red-500 hover:text-white active:scale-95 rounded-2xl transition-all duration-300 w-full text-left uppercase tracking-widest group"
                       >
                         <LogOut className="w-5 h-5" strokeWidth={3} />
-                        Salir del Club
+                        Cerrar Sesión
                       </button>
                     </div>
                   </div>
@@ -175,7 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="px-6 py-5 border-b border-white/10 mb-2">
-                    <p className="text-gold font-black uppercase tracking-[0.2em] text-[10px] mb-1">Miembro Club</p>
+                    <p className="text-gold font-black uppercase tracking-[0.2em] text-[10px] mb-1">Usuario</p>
                     <p className="text-sm font-extrabold text-white truncate">{usuario?.nombre || usuario?.usuario}</p>
                     <p className="text-xs text-slate-400 truncate font-medium">@{usuario?.usuario}</p>
                   </div>

@@ -52,7 +52,7 @@ export default function Login() {
             SocialClub
           </h2>
           <p className="form-subtitle">
-            Acceso Exclusivo Miembros
+            Acceso de Usuarios
           </p>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -115,7 +115,7 @@ export default function Login() {
                 disabled={isPending}
                 className="form-button"
               >
-                {isPending ? "Validando..." : "Entrar al Club"}
+                {isPending ? "Validando..." : "Iniciar Sesión"}
               </button>
             </div>
           </form>
@@ -128,7 +128,7 @@ export default function Login() {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
-              Volver al Feed
+              Ir a Principal
             </Link>
           </div>
         </div>

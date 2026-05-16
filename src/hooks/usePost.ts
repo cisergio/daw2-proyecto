@@ -12,10 +12,14 @@ import {
   where,
   QueryDocumentSnapshot,
   getDoc,
-  doc
+  doc,
+  addDoc,
+  serverTimestamp,
+  increment,
+  updateDoc
 } from "firebase/firestore";
 import type { DocumentData } from "firebase/firestore";
-import type { Post } from "../types";
+import type { Post, PostComment } from "../types";
 
 export function usePost() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -307,4 +311,68 @@ export function useLikeStatus(postId: string, userId: string | null | undefined)
   }, [postId, userId]);
 
   return { isLiked, loading };
+}
+
+/**
+ * Hook para manejar los comentarios de un post.
+ * @param postId ID del post.
+ * @returns { comments, loading, addComment }
+ */
+export function useComments(postId: string | null | undefined) {
+  const [comments, setComments] = useState<PostComment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!postId) {
+      setComments([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const commentsRef = collection(bd, "posts", postId, "comments");
+    const q = query(commentsRef, orderBy("createdAt", "asc"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const commentsArray: PostComment[] = [];
+      snapshot.forEach((doc) => {
+        commentsArray.push({ id: doc.id, ...doc.data() } as PostComment);
+      });
+      setComments(commentsArray);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error al suscribirse a los comentarios:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [postId]);
+
+  const addComment = async (user: any, content: string) => {
+    if (!postId || !user || !content.trim()) return;
+
+    try {
+      const commentsRef = collection(bd, "posts", postId, "comments");
+      await addDoc(commentsRef, {
+        contenido: content.trim(),
+        creador: {
+          uid: user.uid || user.id,
+          usuario: user.usuario,
+          fotoPerfil: user.fotoPerfil || ""
+        },
+        createdAt: serverTimestamp()
+      });
+
+      // Incrementar el contador de comentarios en el post principal
+      const postRef = doc(bd, "posts", postId);
+      await updateDoc(postRef, {
+        numComments: increment(1)
+      });
+    } catch (error) {
+      console.error("Error al añadir comentario:", error);
+      throw error;
+    }
+  };
+
+  return { comments, loading, addComment };
 }

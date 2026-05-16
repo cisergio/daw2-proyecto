@@ -5,7 +5,10 @@ import { useAuth } from "../context/AuthProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LikeButton from "../components/LikeButton";
-import { ArrowUp, Plus } from "lucide-react";
+import { RealTimeAvatar, RealTimeUsername } from "../components/UserInfo";
+import { ArrowUp, Plus, MessageCircle } from "lucide-react";
+import PostActions from "../components/PostActions";
+import { toast } from "sonner";
 
 export default function Feed() {
   const { 
@@ -68,7 +71,7 @@ export default function Feed() {
     /* bg-slate-100: Proporciona contraste premium con las cards blancas */
     <div className="min-h-screen bg-slate-100 py-6 md:py-12 px-4 font-sans">
       <div className="max-w-xl mx-auto space-y-6 md:space-y-8">
-        <h1 className="text-3xl md:text-5xl font-black text-midnight mb-6 md:mb-10 text-center tracking-tighter">Feed</h1>
+        <h1 className="text-3xl md:text-5xl font-black text-midnight mb-6 md:mb-10 text-center tracking-tighter">Principal</h1>
         
         {/* NOTIFICACIÓN DE POSTS NUEVOS (Estilo Twitter Premium) */}
         {pendingPosts.length > 0 && (
@@ -78,7 +81,7 @@ export default function Feed() {
               className="bg-midnight/90 backdrop-blur-md text-gold-light px-6 py-3 rounded-full shadow-2xl hover:bg-gold hover:text-midnight transition-all hover:scale-105 active:scale-95 font-bold flex items-center gap-3 border border-white/10 ring-4 ring-midnight/5"
             >
               <ArrowUp className="w-5 h-5 animate-bounce" />
-              <span>Mostrar {pendingPosts.length} {pendingPosts.length === 1 ? "publicación nueva" : "publicaciones nuevas"}</span>
+              <span>Ver {pendingPosts.length} {pendingPosts.length === 1 ? "publicación nueva" : "publicaciones nuevas"}</span>
             </button>
           </div>
         )}
@@ -99,30 +102,37 @@ export default function Feed() {
               <div className="block p-6 md:p-10 h-full w-full">
                 <div className="flex items-center space-x-5 mb-6">
                   {/* Avatar circular */}
-                  <div className="w-14 h-14 rounded-2xl bg-midnight flex items-center justify-center text-gold font-black text-2xl overflow-hidden shrink-0 border border-white/10 shadow-xl transition-transform group-hover:rotate-3 group-hover:scale-110">
-                    {post.creador?.fotoPerfil ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img 
-                        src={post.creador.fotoPerfil} 
-                        alt={post.creador.usuario || "Usuario"} 
-                        className="w-full h-full object-cover" 
-                      />
-                    ) : (
-                      post.creador ? post.creador.usuario.charAt(0).toUpperCase() : "?"
-                    )}
-                  </div>
+                  {/* Avatar circular en tiempo real */}
+                  <RealTimeAvatar 
+                    uid={post.creador?.uid} 
+                    fallbackPhoto={post.creador?.fotoPerfil} 
+                    fallbackName={post.creador?.usuario}
+                    className="w-14 h-14 rounded-2xl border border-white/10 shadow-xl transition-transform group-hover:rotate-3 group-hover:scale-110"
+                  />
                   <div>
                     <Link 
                       href={`/profile/${post.creador?.uid}`} 
                       className="font-black text-midnight hover:text-gold hover:underline transition-colors relative z-10 text-xl tracking-tighter"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      @{post.creador?.usuario || "anónimo"}
+                      <RealTimeUsername 
+                        uid={post.creador?.uid} 
+                        fallbackName={post.creador?.usuario} 
+                      />
                     </Link>
                     <p className="text-gold-accent mt-0.5">
                       <ClientDate date={post.createdAt?.toDate?.()} />
                     </p>
                   </div>
+                </div>
+
+                {/* MENÚ DE ACCIONES (Tres puntos) */}
+                <div className="absolute top-6 right-6 z-20">
+                  <PostActions 
+                    postId={post.id} 
+                    authorId={post.creador?.uid} 
+                    currentUserId={user?.uid} 
+                  />
                 </div>
                 
                 <p className="text-slate-700 text-xl leading-relaxed whitespace-pre-wrap mb-8 group-hover:text-midnight transition-colors">
@@ -142,7 +152,14 @@ export default function Feed() {
                 
                 {/* Action Bar */}
                 <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
-                  <LikeButton postId={post.id} initialLikes={post.likes} />
+                  <div className="flex items-center space-x-6">
+                    <LikeButton postId={post.id} initialLikes={post.likes} />
+                    
+                    <div className="flex items-center space-x-2 text-slate-400 font-bold">
+                      <MessageCircle className="w-5 h-5" strokeWidth={2.5} />
+                      <span className="text-sm">{post.numComments || 0}</span>
+                    </div>
+                  </div>
                   
                   <div className="text-gold font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
                     Leer más →

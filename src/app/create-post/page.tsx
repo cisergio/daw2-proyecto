@@ -90,7 +90,7 @@ export default function CreatePostPage() {
         loading: "Estamos enviando tu publicación a la nube...",
         success: (res) => {
           if (!res.success) throw new Error(res.error);
-          router.push("/"); // Volvemos al feed tras el éxito
+          router.push("/"); // Ir a Principal tras el éxito
           return res.message;
         },
         error: (err) => err.message || "Vaya, no hemos podido publicar tu post.",
@@ -117,7 +117,7 @@ export default function CreatePostPage() {
           <Link 
             href="/" 
             className="btn-ghost group"
-            title="Cancelar y volver al feed"
+            title="Cancelar e ir a Principal"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
           </Link>

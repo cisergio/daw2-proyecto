@@ -1,51 +1,83 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getDoc, doc } from "firebase/firestore";
+import { onSnapshot, doc } from "firebase/firestore";
 import { firestore } from "../firebase/config";
 
+// Cache global para compartir listeners entre múltiples componentes
+const userCache: { [uid: string]: { 
+  data: any, 
+  loading: boolean, 
+  error: string | null,
+  listeners: Set<(data: any, loading: boolean, error: string | null) => void>,
+  unsubscribe?: () => void
+}} = {};
+
 /**
- * Hook para obtener los datos de un usuario específico desde Firestore.
+ * Hook para obtener los datos de un usuario específico desde Firestore (Optimizado con Cache).
  * @param usuarioID ID del usuario en la colección "usuarios".
- * @returns { usuario, loading, error }
  */
 export function useUsuario(usuarioID: string | null | undefined) {
-  const [usuario, setUsuario] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<any>(userCache[usuarioID || ""]?.data || null);
+  const [loading, setLoading] = useState<boolean>(!userCache[usuarioID || ""] || userCache[usuarioID || ""]?.loading);
+  const [error, setError] = useState<string | null>(userCache[usuarioID || ""]?.error || null);
 
   useEffect(() => {
-    // Si no hay ID, no intentamos buscar
     if (!usuarioID) {
-      if (usuarioID === null || usuarioID === undefined) {
-        setLoading(false);
-      }
+      setLoading(false);
       return;
     }
 
-    const fetchUsuario = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const docRef = doc(firestore, "usuarios", usuarioID);
-        const docSnap = await getDoc(docRef);
+    // Inicializar cache para este UID si no existe
+    if (!userCache[usuarioID]) {
+      userCache[usuarioID] = {
+        data: null,
+        loading: true,
+        error: null,
+        listeners: new Set(),
+      };
 
-        if (docSnap.exists()) {
-          // Devolvemos los datos limpios junto con el ID del documento
-          setUsuario({ id: docSnap.id, ...docSnap.data() });
-        } else {
-          setUsuario(null);
-          setError("No se ha encontrado el usuario");
+      const docRef = doc(firestore, "usuarios", usuarioID);
+      userCache[usuarioID].unsubscribe = onSnapshot(docRef, 
+        (docSnap) => {
+          const newData = docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+          const newError = docSnap.exists() ? null : "No encontrado";
+          
+          userCache[usuarioID].data = newData;
+          userCache[usuarioID].loading = false;
+          userCache[usuarioID].error = newError;
+          
+          userCache[usuarioID].listeners.forEach(l => l(newData, false, newError));
+        },
+        (err) => {
+          userCache[usuarioID].loading = false;
+          userCache[usuarioID].error = err.message;
+          userCache[usuarioID].listeners.forEach(l => l(null, false, err.message));
         }
-      } catch (err: any) {
-        console.error("Error fetching user:", err);
-        setError(err.message || "Error al obtener los datos del usuario");
-      } finally {
-        setLoading(false);
-      }
+      );
+    }
+
+    // Suscribir este componente a los cambios en el cache
+    const updateState = (newData: any, newLoading: boolean, newError: string | null) => {
+      setData(newData);
+      setLoading(newLoading);
+      setError(newError);
     };
 
-    fetchUsuario();
+    userCache[usuarioID].listeners.add(updateState);
+    
+    // Si ya tenemos datos, actualizamos el estado inicial del componente
+    if (!userCache[usuarioID].loading) {
+      updateState(userCache[usuarioID].data, false, userCache[usuarioID].error);
+    }
+
+    return () => {
+      if (userCache[usuarioID]) {
+        userCache[usuarioID].listeners.delete(updateState);
+        // Opcional: Podríamos limpiar el listener si no hay más componentes usándolo,
+        // pero para una app social suave es mejor mantenerlo en cache mientras la sesión dure.
+      }
+    };
   }, [usuarioID]);
 
-  return { usuario, loading, error };
+  return { usuario: data, loading, error };
 }

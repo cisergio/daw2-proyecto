@@ -6,7 +6,10 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../../context/AuthProvider";
 import LikeButton from "../../../components/LikeButton";
-import { ArrowLeft, MoreHorizontal, MessageCircle, Share2, AlertCircle } from "lucide-react";
+import CommentSection from "../../../components/CommentSection";
+import { RealTimeAvatar, RealTimeUsername } from "../../../components/UserInfo";
+import { ArrowLeft, MessageCircle, Share2, AlertCircle } from "lucide-react";
+import PostActions from "../../../components/PostActions";
 
 export default function SinglePostPage() {
   const { id } = useParams();
@@ -78,27 +81,17 @@ export default function SinglePostPage() {
           <div className="p-8 md:p-12 border-b border-slate-50 flex items-center justify-between">
             <div className="flex items-center space-x-4 md:space-x-6">
               <div className="relative group">
-                <div className="w-20 h-20 rounded-full bg-midnight p-[4px] shadow-2xl transition-transform duration-700 group-hover:rotate-12">
-                  <div className="w-full h-full rounded-full bg-white p-[2px] overflow-hidden">
-                    {post.creador?.fotoPerfil ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img 
-                        src={post.creador.fotoPerfil} 
-                        alt={post.creador.usuario} 
-                        className="w-full h-full rounded-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      />
-                    ) : (
-                      <div className="w-full h-full rounded-full bg-midnight flex items-center justify-center text-gold font-black text-3xl">
-                        {post.creador?.usuario?.charAt(0).toUpperCase() || "?"}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <RealTimeAvatar 
+                  uid={post.creador?.uid} 
+                  fallbackPhoto={post.creador?.fotoPerfil} 
+                  fallbackName={post.creador?.usuario}
+                  className="w-20 h-20 rounded-full border-[4px] border-white ring-4 ring-midnight shadow-2xl transition-transform duration-700 group-hover:rotate-12"
+                />
               </div>
               
               <div>
                 <Link href={`/profile/${post.creador?.uid}`} className="font-black text-midnight text-xl md:text-2xl tracking-tighter hover:text-gold hover:underline transition-colors block leading-none mb-1">
-                  @{post.creador?.usuario || "anónimo"}
+                  <RealTimeUsername uid={post.creador?.uid} fallbackName={post.creador?.usuario} />
                 </Link>
                 <div className="text-gold-accent opacity-60">
                   <ClientDate date={post.createdAt?.toDate?.()} />
@@ -106,9 +99,14 @@ export default function SinglePostPage() {
               </div>
             </div>
             
-            <button className="btn-ghost !p-4">
-              <MoreHorizontal className="w-6 h-6" strokeWidth={2.5} />
-            </button>
+            <div className="flex items-center space-x-2">
+              <PostActions 
+                postId={post.id} 
+                authorId={post.creador?.uid} 
+                currentUserId={user?.uid}
+                isDetailView={true}
+              />
+            </div>
           </div>
 
           {/* Body Content */}
@@ -135,10 +133,10 @@ export default function SinglePostPage() {
             <div className="flex items-center gap-4 md:gap-5">
               <LikeButton postId={post.id} initialLikes={post.likes} />
               
-              <button className="btn-premium px-6 md:px-10 py-5">
-                <MessageCircle className="w-5 h-5 group-hover:rotate-12 transition-transform mr-2 md:mr-3" strokeWidth={3} />
-                <span>Responder</span>
-              </button>
+              <div className="flex items-center space-x-2 text-slate-500 font-bold px-4 py-2 bg-white/50 rounded-2xl border border-slate-100 shadow-sm">
+                <MessageCircle className="w-5 h-5 text-midnight" strokeWidth={3} />
+                <span>{post.numComments || 0}</span>
+              </div>
             </div>
 
             <button className="btn-ghost !p-5 !shadow-xl !shadow-slate-200/20 bg-white">
@@ -146,6 +144,9 @@ export default function SinglePostPage() {
             </button>
           </div>
         </article>
+
+        {/* Comment Section */}
+        <CommentSection postId={post.id} />
       </div>
     </main>
   );

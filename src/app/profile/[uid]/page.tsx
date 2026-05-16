@@ -7,7 +7,8 @@ import { useUsuario } from "../../../hooks/useUsuarios";
 import { useUserPosts } from "../../../hooks/usePost";
 import { toast } from "sonner";
 import LikeButton from "../../../components/LikeButton";
-import { ArrowLeft, Settings, Calendar } from "lucide-react";
+import { RealTimeAvatar, RealTimeUsername } from "../../../components/UserInfo";
+import { ArrowLeft, Settings, Calendar, MessageCircle } from "lucide-react";
 
 export default function UserProfilePage() {
   const { uid } = useParams();
@@ -38,7 +39,7 @@ export default function UserProfilePage() {
         <div className="form-card">
           <h1 className="text-2xl font-black text-red-600 mb-3 tracking-tight">Usuario no encontrado</h1>
           <p className="form-subtitle">{errorUser}</p>
-          <Link href="/" className="btn-premium inline-flex mt-6">Volver al Feed</Link>
+          <Link href="/" className="btn-premium inline-flex mt-6">Ir a Principal</Link>
         </div>
       </div>
     );
@@ -57,7 +58,7 @@ export default function UserProfilePage() {
           <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 group-hover:bg-gold group-hover:border-gold transition-all duration-500 shadow-2xl">
             <ArrowLeft className="w-5 h-5 text-white group-hover:text-midnight transition-colors" strokeWidth={3} />
           </div>
-          <span className="ml-4 text-white font-black tracking-tighter opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">VOLVER AL FEED</span>
+          <span className="ml-4 text-white font-black tracking-tighter opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">IR A PRINCIPAL</span>
         </Link>
 
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-midnight/80"></div>
@@ -93,21 +94,20 @@ export default function UserProfilePage() {
                   )}
                 </div>
               </div>
-
               {/* Acciones */}
               <div className="flex space-x-4">
                 {isMyProfile ? (
                   <>
-                    <button className="btn-premium">
+                    <Link href="/profile/edit" className="btn-premium">
                       Editar Perfil
-                    </button>
+                    </Link>
                     <button className="btn-ghost !p-4">
                       <Settings className="w-6 h-6" strokeWidth={2} />
                     </button>
                   </>
                 ) : (
                   <button className="btn-premium px-10 py-4 !text-xs">
-                    Seguir Miembro
+                    Seguir Usuario
                   </button>
                 )}
               </div>
@@ -178,6 +178,19 @@ export default function UserProfilePage() {
               {posts.map((post) => (
                 <div key={post.id} className="card-premium hover:border-gold/30 group cursor-pointer relative flex flex-col">
                   <Link href={`/post/${post.id}`} className="block p-6 md:p-8 h-full w-full">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <RealTimeAvatar 
+                        uid={uid as string} 
+                        fallbackPhoto={userData?.fotoPerfil} 
+                        fallbackName={userData?.usuario}
+                        className="w-10 h-10 border border-white/10"
+                      />
+                      <RealTimeUsername 
+                        uid={uid as string} 
+                        fallbackName={userData?.usuario} 
+                        className="font-bold text-midnight text-sm"
+                      />
+                    </div>
                     <p className="text-slate-700 text-base md:text-lg font-medium leading-relaxed line-clamp-4 mb-6 md:mb-8 group-hover:text-midnight transition-colors">{post.contenido}</p>
                     {post.adjunto && (
                       <div className="aspect-[16/10] rounded-2xl overflow-hidden mb-8 bg-slate-50 border border-slate-100 p-1">
@@ -185,7 +198,13 @@ export default function UserProfilePage() {
                       </div>
                     )}
                     <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-50">
-                      <LikeButton postId={post.id} initialLikes={post.likes} />
+                      <div className="flex items-center space-x-4">
+                        <LikeButton postId={post.id} initialLikes={post.likes} />
+                        <div className="flex items-center space-x-1.5 text-slate-400 font-bold">
+                          <MessageCircle className="w-4 h-4" strokeWidth={2.5} />
+                          <span className="text-xs">{post.numComments || 0}</span>
+                        </div>
+                      </div>
                       <span className="text-gold-accent opacity-50 group-hover:opacity-100 transition-opacity"><LocalClientDate timestamp={post.createdAt} /></span>
                     </div>
                   </Link>
@@ -195,7 +214,7 @@ export default function UserProfilePage() {
           ) : (
             <div className="card-premium p-20 text-center border-4 border-dashed border-slate-100 bg-transparent flex flex-col items-center justify-center">
               <h3 className="text-2xl font-black text-midnight tracking-tighter mb-3">No hay publicaciones aún</h3>
-              <p className="text-gold-accent opacity-40">Este miembro está siendo discreto</p>
+              <p className="text-gold-accent opacity-40">Este usuario está siendo discreto</p>
             </div>
           )}
         </div>
