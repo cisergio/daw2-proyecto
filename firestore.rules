@@ -24,6 +24,12 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId; // Solo el propio usuario puede editar su perfil
     }
 
+    // Reglas para la colección de seguidores
+    match /seguidores/{relacionId} {
+      allow read: if true; // Permitir a cualquiera ver quién sigue a quién
+      allow write: if false; // Denegar escrituras del cliente directo. Las operaciones son a través de Server Actions.
+    }
+
     // Regla por defecto para cualquier otro documento
     match /{document=**} {
       allow read, write: if request.auth != null;

@@ -10,6 +10,8 @@ export type cliente = {
   fotoPerfil?: string;
   fotoPortada?: string;
   biografia?: string;
+  seguidores?: number;
+  seguidos?: number;
 };
 
 export type Post = {

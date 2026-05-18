@@ -8,7 +8,11 @@ import { useUserPosts } from "../../../hooks/usePost";
 import { toast } from "sonner";
 import LikeButton from "../../../components/LikeButton";
 import { RealTimeAvatar, RealTimeUsername } from "../../../components/UserInfo";
-import { ArrowLeft, Settings, Calendar, MessageCircle } from "lucide-react";
+import { ArrowLeft, Settings, Calendar, MessageCircle, UserPlus, UserMinus, UserCheck } from "lucide-react";
+import { useEsSeguidor } from "../../../hooks/useEsSeguidor";
+import { seguirUsuario } from "../../../app/actions/seguirUsuario";
+import { dejarDeSeguirUsuario } from "../../../app/actions/dejarDeSeguirUsuario";
+import FollowersModal from "../../../components/FollowersModal";
 
 export default function UserProfilePage() {
   const { uid } = useParams();
@@ -20,6 +24,52 @@ export default function UserProfilePage() {
   const { posts, loading: loadingPosts, error: errorPosts } = useUserPosts(uid as string);
 
   const isMyProfile = user?.uid === uid;
+
+  // Hook reactivo de seguimiento
+  const { esSeguidor, loading: loadingSeguimiento } = useEsSeguidor(user?.uid, uid as string);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Estados para el Modal de Seguidores / Seguidos
+  const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
+  const [followModalType, setFollowModalType] = useState<"seguidores" | "seguidos">("seguidores");
+
+  const abrirModalSeguidores = (tipo: "seguidores" | "seguidos") => {
+    setFollowModalType(tipo);
+    setIsFollowModalOpen(true);
+  };
+
+  const handleToggleSeguimiento = async () => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para seguir usuarios");
+      router.push("/login");
+      return;
+    }
+    if (actionLoading) return;
+
+    setActionLoading(true);
+    try {
+      if (esSeguidor) {
+        const res = await dejarDeSeguirUsuario(user.uid, uid as string);
+        if (res.success) {
+          toast.success(`Has dejado de seguir a @${userData?.usuario}`);
+        } else {
+          toast.error(res.error || "No se pudo completar la acción");
+        }
+      } else {
+        const res = await seguirUsuario(user.uid, uid as string);
+        if (res.success) {
+          toast.success(`¡Ahora sigues a @${userData?.usuario}! ✨`);
+        } else {
+          toast.error(res.error || "No se pudo completar la acción");
+        }
+      }
+    } catch (err) {
+      console.error("Error al gestionar seguimiento:", err);
+      toast.error("Error en la operación");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   if (loadingUser) {
     return (
@@ -106,15 +156,37 @@ export default function UserProfilePage() {
                     </button>
                   </>
                 ) : (
-                  <button className="btn-premium px-10 py-4 !text-xs">
-                    Seguir Usuario
+                  <button 
+                    onClick={handleToggleSeguimiento}
+                    disabled={loadingSeguimiento || actionLoading}
+                    className={`btn-premium px-10 py-4 !text-xs min-w-[180px] flex items-center justify-center gap-2.5 transition-all duration-300 ${
+                      esSeguidor 
+                        ? "!bg-gold-soft !text-gold hover:!bg-red-500 hover:!text-white border-gold/20 group/follow" 
+                        : ""
+                    }`}
+                  >
+                    {loadingSeguimiento || actionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                    ) : esSeguidor ? (
+                      <>
+                        <UserCheck className="w-4 h-4 group-hover/follow:hidden" strokeWidth={2.5} />
+                        <UserMinus className="w-4 h-4 hidden group-hover/follow:block" strokeWidth={2.5} />
+                        <span className="group-hover/follow:hidden">Siguiendo</span>
+                        <span className="hidden group-hover/follow:inline">Dejar de Seguir</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4" strokeWidth={2.5} />
+                        <span>Seguir Usuario</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>
             </div>
 
             {/* Texto y Bio */}
-            <div className="mt-8 md:mt-10 text-center md:text-left">
+            <div className="mt-8 md:mt-10 text-center md:text-left px-8 sm:px-12">
               <h1 className="text-3xl md:text-5xl font-black text-midnight tracking-tighter leading-none mb-2 px-4 md:px-0">
                 {userData?.nombre} {userData?.apellidos}
               </h1>
@@ -137,22 +209,28 @@ export default function UserProfilePage() {
             </div>
 
             {/* Stats */}
-            <div className="mt-10 md:mt-12 grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 pt-8 md:pt-10">
-              <div className="text-center group cursor-pointer px-2">
+            <div className="mt-10 md:mt-12 grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 pt-8 md:pt-10 px-8 sm:px-12 pb-8 sm:pb-12">
+              <div className="text-center group cursor-pointer px-2 py-2">
                 <div className="text-xl md:text-3xl font-black text-midnight group-hover:text-gold transition-colors tracking-tighter">{posts.length}</div>
                 <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60">Posts</div>
               </div>
-              <div className="text-center group cursor-pointer px-2">
+              <div 
+                onClick={() => abrirModalSeguidores("seguidores")}
+                className="text-center group cursor-pointer px-2 hover:bg-slate-200/40 rounded-2xl py-2 transition-all duration-300"
+              >
                 <div className="text-xl md:text-3xl font-black text-midnight group-hover:text-gold transition-colors tracking-tighter">
                   {userData?.seguidores || 0}
                 </div>
-                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60">Seguidores</div>
+                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60 group-hover:opacity-100 transition-opacity">Seguidores</div>
               </div>
-              <div className="text-center group cursor-pointer px-2">
+              <div 
+                onClick={() => abrirModalSeguidores("seguidos")}
+                className="text-center group cursor-pointer px-2 hover:bg-slate-200/40 rounded-2xl py-2 transition-all duration-300"
+              >
                 <div className="text-xl md:text-3xl font-black text-midnight group-hover:text-gold transition-colors tracking-tighter">
                   {userData?.seguidos || 0}
                 </div>
-                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60">Seguidos</div>
+                <div className="text-[10px] md:text-xs text-gold-accent mt-1 opacity-60 group-hover:opacity-100 transition-opacity">Seguidos</div>
               </div>
             </div>
           </div>
@@ -218,6 +296,14 @@ export default function UserProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Modal de Seguidores y Seguidos */}
+        <FollowersModal
+          isOpen={isFollowModalOpen}
+          onClose={() => setIsFollowModalOpen(false)}
+          uid={uid as string}
+          type={followModalType}
+        />
     </main>
   );
 }
