@@ -8,12 +8,11 @@ import { useUserPosts } from "../../../hooks/usePost";
 import { toast } from "sonner";
 import LikeButton from "../../../components/LikeButton";
 import { RealTimeAvatar, RealTimeUsername } from "../../../components/UserInfo";
-import { ArrowLeft, Settings, Calendar, MessageCircle, UserPlus, UserMinus, UserCheck } from "lucide-react";
+import { ArrowLeft, Calendar, MessageCircle, UserPlus, UserMinus, UserCheck } from "lucide-react";
 import { useEsSeguidor } from "../../../hooks/useEsSeguidor";
 import { seguirUsuario } from "../../../app/actions/seguirUsuario";
 import { dejarDeSeguirUsuario } from "../../../app/actions/dejarDeSeguirUsuario";
 import FollowersModal from "../../../components/FollowersModal";
-import ShareButton from "../../../components/ShareButton";
 
 export default function UserProfilePage() {
   const { uid } = useParams();
@@ -149,12 +148,9 @@ export default function UserProfilePage() {
               <div className="flex space-x-4">
                 {isMyProfile ? (
                   <>
-                    <Link href="/profile/edit" className="btn-premium">
+                    <Link href="/profile/edit" className="btn-premium px-10">
                       Editar Perfil
                     </Link>
-                    <button className="btn-ghost !p-4">
-                      <Settings className="w-6 h-6" strokeWidth={2} />
-                    </button>
                   </>
                 ) : (
                   <button 
@@ -283,7 +279,6 @@ export default function UserProfilePage() {
                           <MessageCircle className="w-4 h-4" strokeWidth={2.5} />
                           <span className="text-xs">{post.numComments || 0}</span>
                         </div>
-                        <ShareButton postId={post.id} />
                       </div>
                       <span className="text-gold-accent opacity-50 group-hover:opacity-100 transition-opacity"><LocalClientDate timestamp={post.createdAt} /></span>
                     </div>

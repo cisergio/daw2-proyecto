@@ -6,14 +6,14 @@ import { useAuth } from "@/context/AuthProvider";
 import { useUsuario } from "@/hooks/useUsuarios";
 import editarPerfil from "@/app/actions/editarPerfil";
 import { toast } from "sonner";
-import { 
-  ArrowLeft, 
-  Camera, 
-  User, 
-  Type, 
-  AtSign, 
-  FileText, 
-  Save, 
+import {
+  ArrowLeft,
+  Camera,
+  User,
+  Type,
+  AtSign,
+  FileText,
+  Save,
   Loader2,
   Image as ImageIcon
 } from "lucide-react";
@@ -30,7 +30,7 @@ export default function EditProfilePage() {
   const [apellidos, setApellidos] = useState("");
   const [usuario, setUsuario] = useState("");
   const [biografia, setBiografia] = useState("");
-  
+
   // Image State
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -93,7 +93,7 @@ export default function EditProfilePage() {
       formData.append("apellidos", apellidos);
       formData.append("usuario", usuario);
       formData.append("biografia", biografia);
-      
+
       if (avatarFile) formData.append("fotoPerfil", avatarFile);
       if (bannerFile) formData.append("fotoPortada", bannerFile);
 
@@ -123,29 +123,35 @@ export default function EditProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-20">
-      {/* Header Fijo */}
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-4">
+    <main className="min-h-screen bg-slate-100 pb-20 font-sans">
+      {/* Header Fijo - Premium & Spacious */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/50 py-5 md:py-6 px-4 md:px-8 shadow-sm">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <button 
-            onClick={() => !isSaving && router.back()} 
+          <button
+            onClick={() => !isSaving && router.back()}
             disabled={isSaving}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200/50 shadow-sm flex items-center justify-center"
+            title="Volver"
           >
-            <ArrowLeft className="w-6 h-6 text-midnight" />
+            <ArrowLeft className="w-5 h-5 text-midnight" strokeWidth={3} />
           </button>
-          <h1 className="text-xl font-black text-midnight uppercase tracking-tighter">Editar Perfil</h1>
-          <div className="w-10"></div>
-        </div>
-      </div>
 
-      <div className="max-w-3xl mx-auto px-4 mt-6">
+          <div className="text-center">
+            <h1 className="text-xl md:text-2xl font-black text-midnight uppercase tracking-tighter leading-none">Editar Perfil</h1>
+            <p className="text-[9px] text-gold font-black uppercase tracking-widest mt-1">Ajustes del Usuario</p>
+          </div>
+
+          <div className="w-11"></div> {/* Balanceador flex */}
+        </div>
+      </header>
+
+      <div className="max-w-3xl mx-auto px-4 mt-8">
         <form onSubmit={handleSubmit} className="space-y-8">
-          
+
           {/* SECCIÓN ESTÉTICA (PORTADA Y AVATAR) */}
           <div className="card-premium !p-0 overflow-hidden relative">
             {/* Banner Preview */}
-            <div 
+            <div
               className={`h-48 md:h-64 bg-midnight relative group ${isSaving ? 'cursor-not-allowed' : 'cursor-pointer'}`}
               onClick={() => !isSaving && bannerInputRef.current?.click()}
             >
@@ -153,30 +159,30 @@ export default function EditProfilePage() {
                 <img src={bannerPreview} alt="Portada" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gold/30">
-                  <ImageIcon className="w-12 h-12" />
+                  <ImageIcon className="w-12 h-12 animate-pulse" />
                 </div>
               )}
               {!isSaving && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="bg-white/20 backdrop-blur-md p-3 rounded-full border border-white/30 text-white flex items-center gap-2 font-bold text-sm">
-                    <Camera className="w-5 h-5" />
-                    Cambiar Portada
+                <div className="absolute inset-0 bg-midnight/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center duration-300">
+                  <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl border border-white/20 text-white flex items-center gap-2 font-bold text-sm shadow-xl">
+                    <Camera className="w-5 h-5 text-gold" strokeWidth={2.5} />
+                    <span>Cambiar Portada</span>
                   </div>
                 </div>
               )}
-              <input 
-                type="file" 
-                ref={bannerInputRef} 
-                onChange={(e) => handleImageChange(e, 'banner')} 
-                className="hidden" 
+              <input
+                type="file"
+                ref={bannerInputRef}
+                onChange={(e) => handleImageChange(e, 'banner')}
+                className="hidden"
                 accept="image/*"
                 disabled={isSaving}
               />
             </div>
 
             {/* Avatar Preview */}
-            <div className="px-6 -mt-16 md:-mt-20 pb-8 flex flex-col items-center md:items-start">
-              <div 
+            <div className="px-8 -mt-16 md:-mt-20 pb-8 flex flex-col items-center md:items-start">
+              <div
                 className={`relative group ${isSaving ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 onClick={() => !isSaving && avatarInputRef.current?.click()}
               >
@@ -189,16 +195,16 @@ export default function EditProfilePage() {
                     </div>
                   )}
                   {!isSaving && (
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Camera className="w-8 h-8 text-white" />
+                    <div className="absolute inset-0 bg-midnight/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center duration-300">
+                      <Camera className="w-8 h-8 text-gold" strokeWidth={2.5} />
                     </div>
                   )}
                 </div>
-                <input 
-                  type="file" 
-                  ref={avatarInputRef} 
-                  onChange={(e) => handleImageChange(e, 'avatar')} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  onChange={(e) => handleImageChange(e, 'avatar')}
+                  className="hidden"
                   accept="image/*"
                   disabled={isSaving}
                 />
@@ -206,32 +212,35 @@ export default function EditProfilePage() {
             </div>
           </div>
 
-          {/* CAMPOS DE TEXTO */}
-          <div className="space-y-6">
+          {/* CAMPOS DE TEXTO - DENTRO DE CARD PREMIUM */}
+          <div className="card-premium p-8 md:p-12 space-y-8">
+            <div className="border-b border-slate-50 pb-4 mb-6">
+              <h2 className="text-lg font-black text-midnight tracking-tighter uppercase leading-none">Información Personal</h2>
+              <p className="text-[9px] text-gold font-black uppercase tracking-widest mt-1">Detalles públicos de tu perfil</p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 px-1">
-                  <Type className="w-3 h-3" /> Nombre
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                  <Type className="w-3.5 h-3.5 text-gold" strokeWidth={2.5} /> Nombre
                 </label>
-                <input 
-                  type="text" 
-                  value={nombre} 
+                <input
+                  type="text"
+                  value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="form-input" 
                   placeholder="Tu nombre"
                   required
                   disabled={isSaving}
                 />
               </div>
               <div className="space-y-2">
-                <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 px-1">
-                  <Type className="w-3 h-3" /> Apellidos
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                  <Type className="w-3.5 h-3.5 text-gold" strokeWidth={2.5} /> Apellidos
                 </label>
-                <input 
-                  type="text" 
-                  value={apellidos} 
+                <input
+                  type="text"
+                  value={apellidos}
                   onChange={(e) => setApellidos(e.target.value)}
-                  className="form-input" 
                   placeholder="Tus apellidos"
                   required
                   disabled={isSaving}
@@ -240,51 +249,52 @@ export default function EditProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 px-1">
-                <AtSign className="w-3 h-3" /> Usuario
+              <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                <AtSign className="w-3.5 h-3.5 text-gold" strokeWidth={2.5} /> Nombre de Usuario
               </label>
-              <input 
-                type="text" 
-                value={usuario} 
+              <input
+                type="text"
+                value={usuario}
                 onChange={(e) => setUsuario(e.target.value.toLowerCase())}
-                className="form-input" 
-                placeholder="usuario_del_club"
+                placeholder="usuario"
                 required
                 disabled={isSaving}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 px-1">
-                <FileText className="w-3 h-3" /> Biografía
+              <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">
+                <FileText className="w-3.5 h-3.5 text-gold" strokeWidth={2.5} /> Biografía o Descripción
               </label>
-              <textarea 
-                value={biografia} 
+              <textarea
+                value={biografia}
                 onChange={(e) => setBiografia(e.target.value)}
-                className="form-input min-h-[120px] py-4" 
+                className="min-h-[120px] py-4"
                 placeholder="Cuéntanos algo sobre ti..."
                 maxLength={160}
                 disabled={isSaving}
               />
               <div className="flex justify-end">
-                <span className="text-[10px] font-black text-slate-300 uppercase">{biografia.length}/160</span>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${biografia.length >= 140 ? 'text-gold' : 'text-slate-300'}`}>
+                  {biografia.length}/160
+                </span>
               </div>
             </div>
           </div>
 
-          {/* BOTÓN GUARDAR */}
+          {/* BOTÓN GUARDAR - ESTILO PREMIUM */}
           <div className="pt-4 pb-10">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSaving}
-              className="form-button !py-5 flex items-center justify-center gap-3 active:scale-95 transition-transform"
+              className="btn-premium w-full !py-5 flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl hover:shadow-gold/10"
             >
               {isSaving ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-6 h-6 animate-spin text-gold" />
               ) : (
-                <Save className="w-6 h-6" strokeWidth={3} />
+                <Save className="w-5 h-5 text-gold" strokeWidth={3} />
               )}
-              <span className="uppercase tracking-[0.2em] font-black">
+              <span className="uppercase tracking-[0.2em] font-black text-xs">
                 {isSaving ? "Guardando Clubber..." : "Guardar Cambios"}
               </span>
             </button>

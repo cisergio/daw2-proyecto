@@ -10,11 +10,27 @@ export default async function crearUsuario(
   password: string
 ) {
   try {
+    const normalizedUsuario = usuario.toLowerCase().trim();
+    if (!normalizedUsuario || normalizedUsuario.includes(" ")) {
+      return { success: false, error: "El nombre de usuario no puede contener espacios." };
+    }
+
+    // Comprobar si el nombre de usuario ya existe
+    const usernameQuery = await adminFirestore
+      .collection("usuarios")
+      .where("usuario", "==", normalizedUsuario)
+      .limit(1)
+      .get();
+
+    if (!usernameQuery.empty) {
+      return { success: false, error: "El nombre de usuario ya está registrado por otra persona." };
+    }
+
     // 1. Crear el usuario en Firebase Auth usando el Admin SDK
     const userRecord = await auth.createUser({
       email,
       password,
-      displayName: usuario,
+      displayName: normalizedUsuario,
     });
 
     const uid = userRecord.uid;

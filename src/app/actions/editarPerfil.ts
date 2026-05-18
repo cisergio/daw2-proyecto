@@ -26,10 +26,28 @@ export default async function editarPerfil(formData: FormData, uid: string) {
     if (!userDoc.exists) throw new Error("Usuario no encontrado");
     const currentData = userDoc.data();
 
+    // Validar unicidad del nombre de usuario si ha cambiado
+    const normalizedNewUsuario = usuario.toLowerCase().trim();
+    if (normalizedNewUsuario !== currentData?.usuario) {
+      if (!normalizedNewUsuario || normalizedNewUsuario.includes(" ")) {
+        return { success: false, error: "El nombre de usuario no puede contener espacios." };
+      }
+
+      const usernameQuery = await adminFirestore
+        .collection("usuarios")
+        .where("usuario", "==", normalizedNewUsuario)
+        .limit(1)
+        .get();
+
+      if (!usernameQuery.empty) {
+        return { success: false, error: "El nombre de usuario ya está registrado por otra persona." };
+      }
+    }
+
     const updateData: any = {
       nombre,
       apellidos,
-      usuario: usuario.toLowerCase(),
+      usuario: normalizedNewUsuario,
       biografia: biografia || "",
     };
 
