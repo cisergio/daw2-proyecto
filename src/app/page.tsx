@@ -8,6 +8,7 @@ import LikeButton from "../components/LikeButton";
 import { RealTimeAvatar, RealTimeUsername } from "../components/UserInfo";
 import { ArrowUp, Plus, MessageCircle } from "lucide-react";
 import PostActions from "../components/PostActions";
+import ShareButton from "../components/ShareButton";
 import { toast } from "sonner";
 
 export default function Feed() {
@@ -159,6 +160,8 @@ export default function Feed() {
                       <MessageCircle className="w-5 h-5" strokeWidth={2.5} />
                       <span className="text-sm">{post.numComments || 0}</span>
                     </div>
+                    
+                    <ShareButton postId={post.id} />
                   </div>
                   
                   <div className="text-gold font-black text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">

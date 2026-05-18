@@ -10,6 +10,7 @@ import CommentSection from "../../../components/CommentSection";
 import { RealTimeAvatar, RealTimeUsername } from "../../../components/UserInfo";
 import { ArrowLeft, MessageCircle, Share2, AlertCircle } from "lucide-react";
 import PostActions from "../../../components/PostActions";
+import ShareButton from "../../../components/ShareButton";
 
 export default function SinglePostPage() {
   const { id } = useParams();
@@ -139,9 +140,11 @@ export default function SinglePostPage() {
               </div>
             </div>
 
-            <button className="btn-ghost !p-5 !shadow-xl !shadow-slate-200/20 bg-white">
-              <Share2 className="w-6 h-6 group-hover:scale-110 transition-transform" strokeWidth={3} />
-            </button>
+            <ShareButton 
+              postId={post.id} 
+              className="!shadow-xl !shadow-slate-200/20 bg-white !p-5" 
+              iconClassName="w-6 h-6" 
+            />
           </div>
         </article>
 

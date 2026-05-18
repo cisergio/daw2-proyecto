@@ -13,6 +13,7 @@ import { useEsSeguidor } from "../../../hooks/useEsSeguidor";
 import { seguirUsuario } from "../../../app/actions/seguirUsuario";
 import { dejarDeSeguirUsuario } from "../../../app/actions/dejarDeSeguirUsuario";
 import FollowersModal from "../../../components/FollowersModal";
+import ShareButton from "../../../components/ShareButton";
 
 export default function UserProfilePage() {
   const { uid } = useParams();
@@ -282,6 +283,7 @@ export default function UserProfilePage() {
                           <MessageCircle className="w-4 h-4" strokeWidth={2.5} />
                           <span className="text-xs">{post.numComments || 0}</span>
                         </div>
+                        <ShareButton postId={post.id} />
                       </div>
                       <span className="text-gold-accent opacity-50 group-hover:opacity-100 transition-opacity"><LocalClientDate timestamp={post.createdAt} /></span>
                     </div>
