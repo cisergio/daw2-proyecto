@@ -19,6 +19,8 @@ export default async function editarPerfil(formData: FormData, uid: string) {
     
     const fotoPerfilFile = formData.get("fotoPerfil") as File | null;
     const fotoPortadaFile = formData.get("fotoPortada") as File | null;
+    const deleteAvatar = formData.get("deleteAvatar") === "true";
+    const deleteBanner = formData.get("deleteBanner") === "true";
 
     // 0. Obtener datos actuales
     const userDocRef = adminFirestore.collection("usuarios").doc(uid);
@@ -52,7 +54,9 @@ export default async function editarPerfil(formData: FormData, uid: string) {
     };
 
     // Procesar Foto de Perfil
-    if (fotoPerfilFile && fotoPerfilFile.size > 0) {
+    if (deleteAvatar) {
+      updateData.fotoPerfil = "";
+    } else if (fotoPerfilFile && fotoPerfilFile.size > 0) {
       const arrayBuffer = await fotoPerfilFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const fileName = `perfiles/${uid}/avatar_${Date.now()}_${fotoPerfilFile.name.replace(/[^a-z0-9.]/gi, "_")}`;
@@ -67,7 +71,9 @@ export default async function editarPerfil(formData: FormData, uid: string) {
     }
 
     // Procesar Foto de Portada
-    if (fotoPortadaFile && fotoPortadaFile.size > 0) {
+    if (deleteBanner) {
+      updateData.fotoPortada = "";
+    } else if (fotoPortadaFile && fotoPortadaFile.size > 0) {
       const arrayBuffer = await fotoPortadaFile.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const fileName = `perfiles/${uid}/portada_${Date.now()}_${fotoPortadaFile.name.replace(/[^a-z0-9.]/gi, "_")}`;
@@ -90,6 +96,9 @@ export default async function editarPerfil(formData: FormData, uid: string) {
      * Nota: No usamos await para que el usuario reciba la respuesta de éxito rápido,
      * pero en server actions de Next.js es más seguro esperar si queremos garantizar el éxito.
      */
+    const newFotoPerfil = updateData.hasOwnProperty("fotoPerfil")
+      ? updateData.fotoPerfil
+      : (currentData?.fotoPerfil || "");
     
     // Sincronizar Posts
     const postsSnapshot = await adminFirestore.collection("posts").where("creador.uid", "==", uid).get();
@@ -99,7 +108,7 @@ export default async function editarPerfil(formData: FormData, uid: string) {
         batch.update(doc.ref, {
           "creador.nombre": updateData.nombre,
           "creador.usuario": updateData.usuario,
-          "creador.fotoPerfil": updateData.fotoPerfil || currentData?.fotoPerfil || ""
+          "creador.fotoPerfil": newFotoPerfil
         });
       });
       await batch.commit();
@@ -115,7 +124,7 @@ export default async function editarPerfil(formData: FormData, uid: string) {
           batch.update(doc.ref, {
             "creador.nombre": updateData.nombre,
             "creador.usuario": updateData.usuario,
-            "creador.fotoPerfil": updateData.fotoPerfil || currentData?.fotoPerfil || ""
+            "creador.fotoPerfil": newFotoPerfil
           });
         });
         await batch.commit();

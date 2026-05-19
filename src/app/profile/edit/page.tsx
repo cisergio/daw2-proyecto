@@ -15,7 +15,8 @@ import {
   FileText,
   Save,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Trash2
 } from "lucide-react";
 import Link from "next/link";
 
@@ -36,6 +37,8 @@ export default function EditProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [deleteAvatar, setDeleteAvatar] = useState(false);
+  const [deleteBanner, setDeleteBanner] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +53,8 @@ export default function EditProfilePage() {
       setBiografia(initialData.biografia || "");
       setAvatarPreview(initialData.fotoPerfil || null);
       setBannerPreview(initialData.fotoPortada || null);
+      setDeleteAvatar(false);
+      setDeleteBanner(false);
     }
   }, [initialData, isSaving]);
 
@@ -71,12 +76,28 @@ export default function EditProfilePage() {
         if (type === 'avatar') {
           setAvatarFile(file);
           setAvatarPreview(reader.result as string);
+          setDeleteAvatar(false);
         } else {
           setBannerFile(file);
           setBannerPreview(reader.result as string);
+          setDeleteBanner(false);
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = (type: 'avatar' | 'banner') => {
+    if (type === 'avatar') {
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      setDeleteAvatar(true);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    } else {
+      setBannerFile(null);
+      setBannerPreview(null);
+      setDeleteBanner(true);
+      if (bannerInputRef.current) bannerInputRef.current.value = "";
     }
   };
 
@@ -93,6 +114,8 @@ export default function EditProfilePage() {
       formData.append("apellidos", apellidos);
       formData.append("usuario", usuario);
       formData.append("biografia", biografia);
+      formData.append("deleteAvatar", deleteAvatar ? "true" : "false");
+      formData.append("deleteBanner", deleteBanner ? "true" : "false");
 
       if (avatarFile) formData.append("fotoPerfil", avatarFile);
       if (bannerFile) formData.append("fotoPortada", bannerFile);
@@ -170,6 +193,19 @@ export default function EditProfilePage() {
                   </div>
                 </div>
               )}
+              {bannerPreview && !isSaving && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveImage('banner');
+                  }}
+                  className="absolute top-4 right-4 z-10 p-2.5 bg-red-500/80 hover:bg-red-600 backdrop-blur-sm text-white rounded-xl transition-all shadow-lg hover:scale-105 active:scale-95 border border-red-400/30 flex items-center justify-center"
+                  title="Eliminar Portada"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
               <input
                 type="file"
                 ref={bannerInputRef}
@@ -182,32 +218,47 @@ export default function EditProfilePage() {
 
             {/* Avatar Preview */}
             <div className="px-8 -mt-16 md:-mt-20 pb-8 flex flex-col items-center md:items-start">
-              <div
-                className={`relative group ${isSaving ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={() => !isSaving && avatarInputRef.current?.click()}
-              >
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white overflow-hidden bg-midnight shadow-2xl relative">
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gold text-4xl font-black">
-                      {nombre?.charAt(0) || user.email?.charAt(0)}
-                    </div>
-                  )}
-                  {!isSaving && (
-                    <div className="absolute inset-0 bg-midnight/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center duration-300">
-                      <Camera className="w-8 h-8 text-gold" strokeWidth={2.5} />
-                    </div>
-                  )}
+              <div className="relative">
+                {avatarPreview && !isSaving && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage('avatar');
+                    }}
+                    className="absolute -top-1 -right-1 z-20 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all shadow-md hover:scale-105 active:scale-95 border-2 border-white flex items-center justify-center"
+                    title="Eliminar Foto de Perfil"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <div
+                  className={`relative group ${isSaving ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={() => !isSaving && avatarInputRef.current?.click()}
+                >
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white overflow-hidden bg-midnight shadow-2xl relative">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gold text-4xl font-black">
+                        {nombre?.charAt(0) || user.email?.charAt(0)}
+                      </div>
+                    )}
+                    {!isSaving && (
+                      <div className="absolute inset-0 bg-midnight/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center duration-300">
+                        <Camera className="w-8 h-8 text-gold" strokeWidth={2.5} />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    ref={avatarInputRef}
+                    onChange={(e) => handleImageChange(e, 'avatar')}
+                    className="hidden"
+                    accept="image/*"
+                    disabled={isSaving}
+                  />
                 </div>
-                <input
-                  type="file"
-                  ref={avatarInputRef}
-                  onChange={(e) => handleImageChange(e, 'avatar')}
-                  className="hidden"
-                  accept="image/*"
-                  disabled={isSaving}
-                />
               </div>
             </div>
           </div>
