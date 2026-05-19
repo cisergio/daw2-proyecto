@@ -1,6 +1,7 @@
 "use server";
 import { adminFirestore, auth } from "@/firebase/admin";
 import { Timestamp } from "firebase-admin/firestore";
+import { enviarCorreoConfirmacion } from "./verificationActions";
 
 export default async function crearUsuario(
   nombre: string,
@@ -25,7 +26,10 @@ export default async function crearUsuario(
     if (!usernameQuery.empty) {
       return { success: false, error: "El nombre de usuario ya está registrado por otra persona." };
     }
-
+    if(!email.endsWith("@educa.jcyl.es")){
+      return{success: false, error: "El email introducido no es válido, solo correos de la junta (@educa.jcyl.es)"}
+    }
+    
     // 1. Crear el usuario en Firebase Auth usando el Admin SDK
     const userRecord = await auth.createUser({
       email,
@@ -42,13 +46,20 @@ export default async function crearUsuario(
       usuario: usuario.toLowerCase(),
       email,
       creacion: Timestamp.fromDate(new Date()),
-      uid: uid,
+      uid: uid, // Guardamos el UID también dentro del documento por conveniencia
       fotoPerfil: "",
       seguidores: 0,
-      seguidos: 0 // Guardamos el UID también dentro del documento por conveniencia
+      seguidos: 0,
+      emailVerificado:false
     });
 
-    return { success: true, message: "Usuario creado exitosamente" };
+    // 3. Enviar correo de confirmación con código
+    const confirmacion = await enviarCorreoConfirmacion(email);
+    if (!confirmacion.success) {
+      console.warn("Correo no enviado, pero usuario creado:", confirmacion.error);
+    }
+
+    return { success: true, message: "Usuario creado. Por favor, verifica tu correo." };
   } catch (error: any) {
     console.error("Error en registro Admin SDK:", error.message);
 

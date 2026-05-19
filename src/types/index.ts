@@ -12,6 +12,7 @@ export type cliente = {
   biografia?: string;
   seguidores?: number;
   seguidos?: number;
+  emailVerificado:boolean
 };
 
 export type Post = {

@@ -34,7 +34,7 @@ export default function CreateAccount() {
       toast.promise(promise(), {
         loading: "Creando tu cuenta...",
         success: (msg) => {
-          router.push("/login"); // Redirigir al login tras el éxito
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`); // Redirigir a verificación
           return msg;
         },
         error: (err) => err.message || "No se pudo crear la cuenta",
@@ -43,67 +43,74 @@ export default function CreateAccount() {
   };
 
   return (
-    <div className="form-container">
-      <div className="form-card">
-        <div className="form-header">
-          <span className="form-icon-container">
+    <div className="form-container bg-slate-50/50">
+      <div className="form-card shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border-none">
+        <div className="form-header flex justify-center mb-8">
+          <div className="bg-midnight p-4 rounded-3xl shadow-xl shadow-midnight/20">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="white"
-              className="form-icon"
+              strokeWidth={2}
+              stroke="url(#gold-gradient)"
+              className="w-8 h-8"
             >
+              <defs>
+                <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#d97706" />
+                  <stop offset="100%" stopColor="#fbbf24" />
+                </linearGradient>
+              </defs>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
               />
             </svg>
-          </span>
+          </div>
         </div>
-        <h2 className="form-title">Crear Nueva Cuenta</h2>
-        <p className="form-subtitle">Completa el formulario para registrarte</p>
+        
+        <h2 className="form-title !text-3xl lg:!text-4xl">Únete al Club</h2>
+        <p className="form-subtitle">Forma parte de la comunidad Juan de Colonia</p>
 
-        <form onSubmit={handleSingUp} className="form-body">
-          <div className="form-input-group">
-            <label htmlFor="name" className="form-label">
-              Nombre
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              required
-              className="form-input"
-              placeholder="Como te llamas?"
-              pattern="^[A-Za-zÀ-ÿñÑ]+$"
-              title="Dudo que tu nombre tenga esos caracteres tan raros"
-            />
+        <form onSubmit={handleSingUp} className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-input-group">
+              <label htmlFor="name" className="input-label">
+                Nombre
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+                placeholder="Nombre"
+                pattern="^[A-Za-zÀ-ÿñÑ\s]+$"
+                title="Dudo que tu nombre tenga esos caracteres"
+              />
+            </div>
+
+            <div className="form-input-group">
+              <label htmlFor="apellidos" className="input-label">
+                Apellidos
+              </label>
+              <input
+                id="apellidos"
+                type="text"
+                value={apellidos}
+                onChange={(e) => setApellidos(e.target.value)}
+                required
+                placeholder="Apellidos"
+                pattern="^[A-Za-zÀ-ÿñÑ\s]+$"
+                title="Dudo que tu apellido tenga esos caracteres"
+              />
+            </div>
           </div>
 
           <div className="form-input-group">
-            <label htmlFor="apellidos" className="form-label">
-              Apellidos
-            </label>
-            <input
-              id="apellidos"
-              type="text"
-              value={apellidos}
-              onChange={(e) => setApellidos(e.target.value)}
-              required
-              className="form-input"
-              placeholder="Tus apellidos: "
-              pattern="^[A-Za-z]+$"
-              title="Dudo que tu apellido tenga esos caracteres tan raros"
-            />
-          </div>
-
-          <div className="form-input-group">
-            <label htmlFor="usuario" className="form-label">
-              Usuario
+            <label htmlFor="usuario" className="input-label">
+              Nombre de Usuario (@)
             </label>
             <input
               id="usuario"
@@ -111,16 +118,15 @@ export default function CreateAccount() {
               value={usuario}
               onChange={(e) => setUsuario(e.target.value)}
               required
-              className="form-input"
-              placeholder="Que @ quieres que la gente te vea"
+              placeholder="p. ej. juan_de_colonia"
               pattern="[a-zA-ZÀ-ÿñÑ0-9._\-]{2,20}"
-              title="Solo se permiten letras, numeros y guion bajos y medios. Max: 20 caracteres"
+              title="Letras, números, guiones y puntos. Max 20."
             />
           </div>
 
           <div className="form-input-group">
-            <label htmlFor="email" className="form-label">
-              Correo Electrónico
+            <label htmlFor="email" className="input-label">
+              Correo Institucional
             </label>
             <input
               id="email"
@@ -128,14 +134,15 @@ export default function CreateAccount() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="form-input"
-              placeholder="tu@email.com"
+              placeholder="usuario@educa.jcyl.es"
+              className="border-gold/30 bg-gold/5"
             />
+            <p className="text-[9px] text-slate-400 mt-1 px-1 font-medium">Requerido: @educa.jcyl.es</p>
           </div>
 
           <div className="form-input-group">
-            <label htmlFor="password" className="form-label">
-              Contraseña
+            <label htmlFor="password" className="input-label">
+              Contraseña Segura
             </label>
             <input
               id="password"
@@ -143,27 +150,38 @@ export default function CreateAccount() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="form-input"
+              placeholder="••••••••"
               pattern="[\s\S]{6,50}"
-              title="Min 6 caracteres, max 50"
-              placeholder="Contraseña"
+              title="Mínimo 6 caracteres"
             />
           </div>
 
-          <div className="mt-6 text-sm">
-            <Link href="/login" className="form-link">
-              Volver a Iniciar Sesión
-            </Link>
-          </div>
-
-          <div>
+          <div className="pt-4 space-y-4">
             <button 
               type="submit" 
-              className="form-button disabled:opacity-50 disabled:cursor-not-allowed" 
+              className="form-button group relative overflow-hidden" 
               disabled={isPending}
             >
-              {isPending ? "Procesando..." : "Crear Cuenta"}
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {isPending ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Creando Cuenta...
+                  </>
+                ) : (
+                  "Finalizar Registro"
+                )}
+              </span>
             </button>
+
+            <div className="text-center">
+              <Link href="/login" className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-midnight transition-colors">
+                ¿Ya tienes cuenta? <span className="text-gold">Inicia Sesión</span>
+              </Link>
+            </div>
           </div>
         </form>
       </div>

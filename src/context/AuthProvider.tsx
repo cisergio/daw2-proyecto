@@ -19,33 +19,44 @@ export default function AuthProvider({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Rutas exclusivas para INVITADOS (login y registros). Si tienes sesión, te empuja a la portada ("/")
+  // Rutas exclusivas para INVITADOS (login y registros)
   const guestOnlyRoutes = ["/login", "/reset-password", "/createAccount"];
+  const verificationRoutes = ["/verify-email"];
   
-  // Rutas exclusivas para REGISTRADOS. Si NO tienes sesión, te empuja al login
-  // NOTA: Dejamos el listado vacío momentáneamente (solo "/profile") porque el Feed ("/") ya es público
+  // Rutas exclusivas para REGISTRADOS
   const protectedRoutes = ["/profile"]; 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      setLoading(false);
-
+      
       if (currentUser) {
-        // Guardia para usuarios con sesión (No dejes que vayan al login)
-        if (guestOnlyRoutes.includes(pathname)) {
-          router.replace("/");
+        try {
+          const { doc, getDoc } = await import("firebase/firestore");
+          const { firestore } = await import("../firebase/config");
+          const userDoc = await getDoc(doc(firestore, "usuarios", currentUser.uid));
+          const verifiedStatus = userDoc.exists() ? userDoc.data()?.emailVerificado : false;
+          setIsVerified(verifiedStatus);
+
+          if (!verifiedStatus && !verificationRoutes.includes(pathname)) {
+            router.replace(`/verify-email?email=${encodeURIComponent(currentUser.email || "")}`);
+          }
+          
+          if (verifiedStatus && (verificationRoutes.includes(pathname) || guestOnlyRoutes.includes(pathname))) {
+            router.replace("/");
+          }
+        } catch (error) {
+          console.error("Error comprobando verificación:", error);
         }
-      } else {
-        // Guardia para usuarios anónimos (Si intentan algo privado como modificar su perfil, al login)
-        if (protectedRoutes.includes(pathname)) {
-          router.replace("/login");
-        }
+      } else if (protectedRoutes.includes(pathname)) {
+        router.replace("/login");
       }
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -53,14 +64,17 @@ export default function AuthProvider({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <p className="text-xl font-semibold text-gray-500">Cargando aplicación...</p>
+      <div className="flex justify-center items-center h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Entrando en Social Club...</p>
+        </div>
       </div>
     );
   }
 
-  // Prevenir parpadeos cuando Next.js re-renderiza y está en proceso de redirigir
-  if (user && guestOnlyRoutes.includes(pathname)) return null;
+  if (user && isVerified && (guestOnlyRoutes.includes(pathname) || verificationRoutes.includes(pathname))) return null;
+  if (user && !isVerified && !verificationRoutes.includes(pathname)) return null;
   if (!user && protectedRoutes.includes(pathname)) return null;
 
   return (
