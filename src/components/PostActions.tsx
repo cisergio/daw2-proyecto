@@ -18,9 +18,6 @@ export default function PostActions({ postId, authorId, currentUserId, onDelete,
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Solo mostramos si el usuario es el autor
-  if (currentUserId !== authorId) return null;
-
   // Cerrar al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,6 +51,9 @@ export default function PostActions({ postId, authorId, currentUserId, onDelete,
       }
     }
   };
+
+  // Solo mostramos si el usuario es el autor (Movido aquí para evitar violación de reglas de hooks de React)
+  if (currentUserId !== authorId) return null;
 
   return (
     <div className="relative" ref={menuRef}>

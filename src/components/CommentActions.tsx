@@ -15,8 +15,6 @@ export default function CommentActions({ postId, commentId, authorId, currentUse
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  if (currentUserId !== authorId) return null;
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -45,6 +43,9 @@ export default function CommentActions({ postId, commentId, authorId, currentUse
       }
     }
   };
+
+  // Solo mostramos si el usuario es el autor (Movido aquí para evitar violación de reglas de hooks de React)
+  if (currentUserId !== authorId) return null;
 
   return (
     <div className="relative" ref={menuRef}>
