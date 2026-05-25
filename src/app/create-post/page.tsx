@@ -114,21 +114,36 @@ export default function CreatePostPage() {
 
     // Usamos startTransition para que React gestione el estado de UI mientras se ejecuta la acción
     startTransition(async () => {
+      console.log("[CreatePostPage] 🚀 Iniciando envío del formulario...");
       const formData = new FormData();
       formData.append("content", content);
-      if (imageFile) formData.append("image", imageFile);
+      if (imageFile) {
+        formData.append("image", imageFile);
+        console.log(`[CreatePostPage] 📸 Adjuntando archivo de imagen: "${imageFile.name}" (${imageFile.size} bytes)`);
+      } else {
+        console.log("[CreatePostPage] 📝 Sin archivo de imagen adjunto");
+      }
 
       // Lanzamos la acción y dejamos que 'toast.promise' maneje los mensajes de carga/éxito/error
+      console.log(`[CreatePostPage] 📡 Llamando a la Server Action 'subirPost' para el usuario "${user.uid}"...`);
       const postPromise = subirPost(formData, user.uid);
 
       toast.promise(postPromise, {
         loading: "Estamos enviando tu publicación a la nube...",
         success: (res) => {
-          if (!res.success) throw new Error(res.error);
+          console.log("[CreatePostPage] 📩 Respuesta recibida de 'subirPost':", res);
+          if (!res.success) {
+            console.error("[CreatePostPage] ❌ La Server Action reportó un error:", res.error);
+            throw new Error(res.error);
+          }
+          console.log("[CreatePostPage] 🎉 Post creado exitosamente. Redirigiendo a principal...");
           router.push("/"); // Ir a Principal tras el éxito
           return res.message;
         },
-        error: (err) => err.message || "Vaya, no hemos podido publicar tu post.",
+        error: (err) => {
+          console.error("[CreatePostPage] ❌ Error capturado durante la promesa de publicación:", err);
+          return err.message || "Vaya, no hemos podido publicar tu post.";
+        },
       });
     });
   };
@@ -156,7 +171,7 @@ export default function CreatePostPage() {
                 e.preventDefault();
               }
             }}
-            className={`btn-ghost group ${isPending ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            className={`btn-ghost group ${isPending ? "opacity-40 cursor-not-allowed pointer-events-none select-none" : ""}`}
             title={isPending ? "Subiendo publicación..." : "Cancelar e ir a Principal"}
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
@@ -192,7 +207,7 @@ export default function CreatePostPage() {
                 type="button"
                 onClick={removeImage}
                 disabled={isPending}
-                className="absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-midnight/90 hover:bg-red-600 text-white rounded-xl md:rounded-2xl backdrop-blur-md transition-all active:scale-90 shadow-xl border border-white/10"
+                className={`absolute top-4 right-4 md:top-6 md:right-6 p-3 md:p-4 bg-midnight/90 hover:bg-red-600 text-white rounded-xl md:rounded-2xl backdrop-blur-md transition-all active:scale-90 shadow-xl border border-white/10 ${isPending ? "opacity-40 cursor-not-allowed pointer-events-none" : ""}`}
               >
                 <X className="w-5 h-5" strokeWidth={3} />
               </button>
@@ -207,7 +222,7 @@ export default function CreatePostPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending}
-                className="btn-secondary !p-4"
+                className={`btn-secondary !p-4 ${isPending ? "opacity-40 cursor-not-allowed pointer-events-none" : ""}`}
                 title="Añadir una imagen a tu post"
               >
                 <ImageIcon className="w-6 h-6" strokeWidth={2.5} />
@@ -217,7 +232,7 @@ export default function CreatePostPage() {
             <button
               type="submit"
               disabled={isPending || (!content.trim() && !imageFile)}
-              className="form-button !w-auto px-10"
+              className={`form-button !w-auto px-10 ${isPending ? "opacity-50 cursor-not-allowed pointer-events-none select-none bg-slate-400" : ""}`}
             >
               {isPending && (
                 <Loader2 className="animate-spin h-5 w-5 mr-3" />
