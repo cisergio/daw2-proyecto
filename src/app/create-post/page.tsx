@@ -217,7 +217,7 @@ export default function CreatePostPage() {
           {/* Barra de herramientas inferior */}
           <div className="flex items-center justify-between pt-8 border-t border-slate-50">
             <div className="flex items-center gap-3">
-              <input type="file" accept="image/*" onChange={handleImageChange} ref={fileInputRef} className="hidden" />
+              <input type="file" accept="image/*, image/gif" onChange={handleImageChange} ref={fileInputRef} className="hidden" />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
