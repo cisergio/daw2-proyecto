@@ -28,6 +28,41 @@ export default function CreatePostPage() {
     }
   }, [user, router]);
 
+  // Prevenir salida o recarga accidental de la pestaña durante la subida
+  useEffect(() => {
+    if (!isPending) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ""; // Requerido por estándares modernos
+      return "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isPending]);
+
+  // Interceptar botón de atrás/adelante del navegador
+  useEffect(() => {
+    if (!isPending) return;
+
+    // Empujamos un estado dummy para interceptar el botón atrás
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = (e: PopStateEvent) => {
+      // Si intentan ir atrás, volvemos a empujar el estado para bloquear el retroceso
+      window.history.pushState(null, "", window.location.href);
+      toast.warning("Espera a que termine de subirse tu publicación por favor.");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isPending]);
+
   /**
    * Gestiona la selección de una imagen y genera la vista previa.
    */
@@ -115,9 +150,14 @@ export default function CreatePostPage() {
         {/* Cabecera con botón de volver */}
         <div className="p-6 md:p-8 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-sm sticky top-0 z-10">
           <Link 
-            href="/" 
-            className="btn-ghost group"
-            title="Cancelar e ir a Principal"
+            href={isPending ? "#" : "/"} 
+            onClick={(e) => {
+              if (isPending) {
+                e.preventDefault();
+              }
+            }}
+            className={`btn-ghost group ${isPending ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            title={isPending ? "Subiendo publicación..." : "Cancelar e ir a Principal"}
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
           </Link>
