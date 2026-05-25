@@ -69,9 +69,9 @@ export default function CreatePostPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validación básica de tamaño (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("La imagen es demasiado pesada. El límite son 5MB.");
+      // Validación básica de tamaño (20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error("La imagen es demasiado pesada. El límite son 20MB.");
         return;
       }
       
