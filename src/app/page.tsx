@@ -18,7 +18,7 @@ export default function Feed() {
     getInitialPosts,
     getMorePosts,
     pendingPosts,
-    showNewPosts
+    showNewPosts,
   } = usePost();
   const { user } = useAuth();
   const router = useRouter();
@@ -64,14 +64,16 @@ export default function Feed() {
       // Si existe el nodo (último post) le decimos al observador que lo vigile
       if (node) observerRef.current.observe(node);
     },
-    [loading, hasMore, getMorePosts]
+    [loading, hasMore, getMorePosts],
   );
 
   return (
     /* bg-slate-100: Proporciona contraste premium con las cards blancas */
     <div className="min-h-screen bg-slate-100 py-6 md:py-12 px-4 font-sans">
       <div className="max-w-xl mx-auto space-y-6 md:space-y-8">
-        <h1 className="text-3xl md:text-5xl font-black text-midnight mb-6 md:mb-10 text-center tracking-tighter">SocialClub</h1>
+        <h1 className="text-3xl md:text-5xl font-black text-midnight mb-6 md:mb-10 text-center tracking-tighter">
+          SocialClub
+        </h1>
 
         {/* NOTIFICACIÓN DE POSTS NUEVOS (Estilo Twitter Premium) */}
         {pendingPosts.length > 0 && (
@@ -81,7 +83,12 @@ export default function Feed() {
               className="bg-midnight/90 backdrop-blur-md text-gold-light px-6 py-3 rounded-full shadow-2xl hover:bg-gold hover:text-midnight transition-all hover:scale-105 active:scale-95 font-bold flex items-center gap-3 border border-white/10 ring-4 ring-midnight/5"
             >
               <ArrowUp className="w-5 h-5 animate-bounce" />
-              <span>Ver {pendingPosts.length} {pendingPosts.length === 1 ? "publicación nueva" : "publicaciones nuevas"}</span>
+              <span>
+                Ver {pendingPosts.length}{" "}
+                {pendingPosts.length === 1
+                  ? "publicación nueva"
+                  : "publicaciones nuevas"}
+              </span>
             </button>
           </div>
         )}
@@ -132,6 +139,7 @@ export default function Feed() {
                     postId={post.id}
                     authorId={post.creador?.uid}
                     currentUserId={user?.uid}
+                    onDelete={() => getInitialPosts()}
                   />
                 </div>
 
@@ -141,12 +149,14 @@ export default function Feed() {
 
                 {post.adjunto && (
                   <div className="rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-slate-50 border border-slate-100 shadow-inner p-1">
-                    {/* eslint-disable-next-line @next/next/no-img-element */
+                    {
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={post.adjunto}
                         alt="Imagen adjunta"
                         className="w-full h-auto max-h-[25rem] md:max-h-[30rem] object-contain rounded-[1.3rem] md:rounded-[1.8rem] transition-transform duration-1000 group-hover:scale-[1.02]"
-                      />}
+                      />
+                    }
                   </div>
                 )}
 
