@@ -102,8 +102,8 @@ export default function CreateAccount() {
                 onChange={(e) => setApellidos(e.target.value)}
                 required
                 placeholder="Apellidos"
-                pattern="^[A-Za-zÀ-ÿñÑ\s]+$"
-                title="Dudo que tu apellido tenga esos caracteres"
+                pattern="^[A-Za-zÀ-ÿñÑ]+(?:\s[A-Za-zÀ-ÿñÑ]+)+$"
+                title="Debes introducir tus dos apellidos separados por un espacio"
               />
             </div>
           </div>
